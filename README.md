@@ -1,6 +1,6 @@
 # ふしぎ診断所
 
-Netlify: https://melodious-gnome-c6849f.netlify.app
+Netlify: https://amazing-dusk-b8e52b.netlify.app
 
 - `index.html` 診断一覧
 - `afro/` アフロ診断 / `akuma/` 悪魔診断
