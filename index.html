@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ふしぎ診断所</title>
+<meta name="description" content="10問で答えがわかる、ちょっと変わった性格診断を集めたサイト。">
+<meta property="og:title" content="ふしぎ診断所">
+<meta property="og:description" content="10問で答えがわかる、ちょっと変わった性格診断。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://melodious-gnome-c6849f.netlify.app/">
+<meta property="og:image" content="https://melodious-gnome-c6849f.netlify.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://melodious-gnome-c6849f.netlify.app/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+<style>
+/* Layout: a shelf of "test booklets"; each quiz keeps its own colors so the shelf previews the world inside. */
+:root{
+  --bg:#f3eee6; --ink:#1f1a24; --soft:#6d6575; --line:#d9d1c6; --card:#fffdf8;
+  --display:"Dela Gothic One","Hiragino Sans",sans-serif;
+  --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#17131c;--ink:#f1ebe2;--soft:#a79fb0;--line:#332b3b;--card:#211b28;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font-family:var(--body);line-height:1.8;padding-inline:16px;padding-block:40px 56px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+header{display:flex;flex-direction:column;gap:8px}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,9vw,52px);margin:0;line-height:1.2;letter-spacing:.02em}
+header p{margin:0;color:var(--soft);font-weight:700}
+.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+a.q{display:flex;flex-direction:column;text-decoration:none;color:inherit;border-radius:18px;overflow:hidden;border:2px solid var(--ink);background:var(--card);transition:transform .15s}
+a.q:hover{transform:translateY(-3px)}
+a.q:focus-visible{outline:3px solid #ff5b2e;outline-offset:3px}
+.cover{aspect-ratio:16/10;display:grid;place-items:center;text-align:center;padding:16px;max-width:100%}
+.cover b{font-weight:400;font-size:clamp(22px,6vw,28px);line-height:1.35}
+.akuma .cover{background:radial-gradient(ellipse at 50% 20%,#3a2a1c,#0f0b15 70%);color:#e8c36a;font-family:"Zen Antique",serif}
+.akuma .cover b{font-family:"Zen Antique","Hiragino Mincho ProN",serif;letter-spacing:.08em}
+.afro .cover{background:repeating-radial-gradient(circle at 50% 120%,#f6c945 0 22px,#f9d667 22px 44px);color:#2b1a12}
+.afro .cover b{font-family:var(--display);text-shadow:2px 2px 0 #ff5b2e}
+.info{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px}
+.info h2{margin:0;font-size:17px;font-weight:800}
+.info p{margin:0;color:var(--soft);font-size:13.5px;font-weight:700}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tags span{font-size:11.5px;font-weight:800;border:1.5px solid var(--line);border-radius:999px;padding:1px 10px;color:var(--soft)}
+.new{background:#ff5b2e;color:#fff!important;border-color:#ff5b2e!important}
+footer{color:var(--soft);font-size:12px;text-align:center;font-weight:700}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Antique&display=swap">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ふしぎ診断所</h1>
+    <p>10問で答えがわかる、ちょっと変わった性格診断。</p>
+  </header>
+  <main class="list">
+    <a class="q afro" href="afro/">
+      <div class="cover"><b>あなたは<br>どのタイプのアフロ?</b></div>
+      <div class="info"><h2>アフロ診断</h2><p>性格は髪に出る。あなたの心の形をアフロで診断。</p>
+        <div class="tags"><span class="new">NEW</span><span>全10問</span><span>8タイプ+隠し</span></div></div>
+    </a>
+    <a class="q akuma" href="akuma/">
+      <div class="cover"><b>あなたに宿る<br>悪魔診断</b></div>
+      <div class="info"><h2>悪魔診断</h2><p>あなたの魂と契約している悪魔がわかる。</p>
+        <div class="tags"><span>全10問</span><span>10タイプ</span></div></div>
+    </a>
+  </main>
+  <footer>診断はすべてエンターテインメントです。</footer>
+</div>
+</body>
+</html>

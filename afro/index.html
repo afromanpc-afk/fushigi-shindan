@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたはどのタイプのアフロ?診断</title>
+<meta name="description" content="10の質問に答えるだけで、あなたの性格にぴったりのアフロがわかる。8タイプ+激レアの隠しタイプあり。">
+<meta property="og:title" content="あなたはどのタイプのアフロ?診断">
+<meta property="og:description" content="10の質問であなたの性格をアフロで診断。激レアの隠しタイプも。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://melodious-gnome-c6849f.netlify.app/afro/">
+<meta property="og:image" content="https://melodious-gnome-c6849f.netlify.app/afro/og/intro.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://melodious-gnome-c6849f.netlify.app/afro/og/intro.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
+<style>
+/* Layout: 70s funk record-sleeve poster; one narrow column, sunburst behind every portrait. Single committed light look. */
+:root{
+  --bg:#f6c945; --paper:#fff4d6; --ink:#2b1a12; --ink-soft:#6b4a33; --hot:#ff5b2e; --teal:#14807c; --pink:#ff7db0;
+  --type:#ff5b2e;
+  --display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;font-family:var(--body);font-size:15px;line-height:1.8;padding-inline:16px;padding-block:20px 48px;
+  padding-top:max(20px,env(safe-area-inset-top));
+  background-image:repeating-radial-gradient(circle at 50% -40%,transparent 0 38px,rgba(255,91,46,.07) 38px 76px)}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.02em}
+p{margin:0}
+button,a{font-family:var(--body)}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.toplink{font-size:13px;color:var(--ink-soft);text-decoration:none;font-weight:700}
+.toplink:hover{color:var(--ink)}
+
+/* intro */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.stamp{display:inline-block;font-family:var(--display);font-size:12px;letter-spacing:.2em;background:var(--ink);color:var(--bg);padding:4px 12px;border-radius:999px}
+.hero h1{font-size:clamp(34px,10vw,52px);line-height:1.2;color:var(--ink);text-shadow:3px 3px 0 var(--hot)}
+.hero h1 small{display:block;font-size:.5em;text-shadow:none;color:var(--ink-soft);letter-spacing:.1em;margin-bottom:6px}
+.hero .lede{max-width:28em;font-weight:700;color:var(--ink-soft)}
+.heroart{width:min(260px,70%);aspect-ratio:200/240;max-width:100%}
+.heroart svg{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.cta{appearance:none;cursor:pointer;border:3px solid var(--ink);background:var(--hot);color:#fff;font-family:var(--display);font-size:19px;letter-spacing:.08em;
+  padding:14px 40px;border-radius:999px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
+.cta:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.cta:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.meta{font-size:12.5px;font-weight:700;color:var(--ink-soft)}
+.xpost{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:800;font-size:14px;border:2.5px solid var(--ink);background:var(--paper);padding:9px 20px;border-radius:999px}
+.xpost:hover{background:#fff}
+.label{font-family:var(--display);font-size:14px;text-align:center;letter-spacing:.1em}
+.roster{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.roster button{appearance:none;cursor:pointer;border:2.5px solid var(--ink);background:var(--paper);border-radius:14px;padding:6px 6px 8px;color:var(--ink);
+  display:flex;flex-direction:column;gap:4px;align-items:center;font-weight:800;font-size:12px;line-height:1.3;text-align:center;transition:transform .12s}
+.roster button:hover{transform:translateY(-2px)}
+.roster svg{width:100%;height:auto;display:block;border-radius:9px}
+.roster .lock{filter:brightness(0) opacity(.75)}
+
+/* quiz */
+.qhead{display:flex;align-items:center;gap:12px}
+.qbadge{flex:none;width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots i{width:18px;height:8px;border-radius:4px;background:rgba(43,26,18,.18)}
+.dots i.on{background:var(--ink)}
+.qtext{font-size:clamp(21px,5.6vw,27px);line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:12px}
+.opt{appearance:none;cursor:pointer;text-align:left;border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:16px;
+  font-size:15.5px;font-weight:700;line-height:1.55;padding:14px 16px;display:flex;gap:12px;align-items:center;box-shadow:3px 3px 0 var(--ink);transition:transform .1s,box-shadow .1s,background .1s}
+.opt:hover{background:#fff}
+.opt:active,.opt.picked{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink);background:var(--pink)}
+.opt .k{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--display);font-size:14px}
+.back{appearance:none;cursor:pointer;background:none;border:none;color:var(--ink-soft);font-weight:800;font-size:13px;align-self:flex-start;padding:4px 0}
+
+/* loading */
+.load{display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:48px;text-align:center;font-weight:800}
+.load svg{width:150px;height:150px;animation:boing .7s ease-in-out infinite alternate}
+@keyframes boing{from{transform:scale(.92) rotate(-6deg)}to{transform:scale(1.06) rotate(6deg)}}
+
+/* result */
+.card{background:var(--paper);border:3px solid var(--ink);border-radius:22px;box-shadow:7px 7px 0 var(--ink);padding:20px 18px 24px;display:flex;flex-direction:column;gap:18px}
+.rtop{text-align:center;display:flex;flex-direction:column;gap:4px;align-items:center}
+.rtop .you{font-weight:800;font-size:13px;color:var(--ink-soft)}
+.rtop h2{font-size:clamp(30px,8.6vw,42px);line-height:1.25;color:var(--ink)}
+.rtop .nick{display:inline-block;background:var(--type);color:#fff;font-weight:800;font-size:13.5px;padding:3px 14px;border-radius:999px;border:2px solid var(--ink)}
+.secret{display:inline-block;font-family:var(--display);font-size:12px;letter-spacing:.25em;background:var(--ink);color:#ffd447;padding:3px 12px;border-radius:4px}
+.portrait{width:min(100%,280px);margin:0 auto}
+.portrait svg{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink)}
+.catch{font-family:var(--display);font-size:clamp(18px,5vw,21px);line-height:1.6;text-align:center;word-break:auto-phrase}
+.axes{display:flex;flex-direction:column;gap:10px;background:rgba(43,26,18,.05);border-radius:14px;padding:14px}
+.axes .t{font-family:var(--display);font-size:13px;letter-spacing:.1em}
+.ax{display:grid;grid-template-columns:4.2em 1fr 4.2em;gap:8px;align-items:center;font-size:12.5px;font-weight:800}
+.ax .l{text-align:right}.ax .r{text-align:left}
+.ax .on{color:var(--ink)} .ax .off{color:rgba(43,26,18,.4)}
+.ax .track{position:relative;height:12px;border-radius:6px;background:rgba(43,26,18,.12);border:2px solid var(--ink);overflow:hidden}
+.ax .track i{position:absolute;top:0;bottom:0;left:0;background:var(--type)}
+.ax .pct{grid-column:1/-1;text-align:center;font-size:11.5px;color:var(--ink-soft);margin-top:-6px;font-variant-numeric:tabular-nums}
+.sec{display:flex;flex-direction:column;gap:6px}
+.sec h3{font-size:16px;display:flex;align-items:center;gap:8px}
+.sec h3::before{content:"";width:14px;height:14px;border-radius:50%;background:var(--type);border:2px solid var(--ink);flex:none}
+.aru{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.aru li{display:flex;gap:10px;align-items:baseline;font-weight:700}
+.aru li::before{content:"✔";color:var(--type);flex:none;-webkit-text-stroke:.5px var(--ink)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pair button{appearance:none;cursor:pointer;border:2.5px solid var(--ink);background:#fff;border-radius:14px;padding:8px 6px 10px;color:var(--ink);
+  display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:12px;line-height:1.45}
+.pair svg{width:64px;height:auto;border-radius:10px;border:2px solid var(--ink)}
+.pair .lbl{font-weight:800;font-size:11px;color:var(--ink-soft)}
+.pair .nm{font-family:var(--display);font-size:14.5px}
+.quote{text-align:center;border-top:2.5px dashed var(--ink);padding-top:16px;font-family:var(--display);font-size:17px;line-height:1.7;word-break:auto-phrase}
+.quote small{display:block;font-family:var(--body);font-weight:800;font-size:11px;letter-spacing:.2em;color:var(--ink-soft)}
+.actions{display:flex;flex-direction:column;gap:12px}
+.share{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--ink);color:#fff;text-decoration:none;font-weight:800;font-size:16px;
+  padding:15px;border-radius:999px;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--hot)}
+.share:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--hot)}
+.ghost{appearance:none;cursor:pointer;border:2.5px solid var(--ink);background:var(--paper);color:var(--ink);font-weight:800;font-size:14.5px;padding:12px;border-radius:999px}
+.note{text-align:center;font-size:11.5px;color:var(--ink-soft);font-weight:700}
+.toast{font-size:12.5px;text-align:center;font-weight:800;color:var(--teal)}
+.fade{animation:pop .35s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{transform:scale(.97)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* ===== 3つの軸 =====
+ A: 派手(+) / 控えめ(-)   B: 直感(+) / 計画(-)   C: みんな(+) / ひとり(-)
+ タイプ = 3軸の向きの組み合わせ(2×2×2 = 8)
+*/
+const TYPES = {
+"+++":"maru","++-":"bakuhatsu","+--":"tower","+-+":"neon",
+"-++":"torinosu","-+-":"sennin","--+":"wataame","---":"mini"};
+
+const T = {
+maru:{name:"まんまる王道アフロ",nick:"アフロ界のセンター",color:"#ff5b2e",bg:"#ffd25e",
+ catch:"いるだけで場がまるくなる、みんなの太陽。",
+ body:"明るくて話しやすいのに、ちゃんと周りも見えている人。ノリで動いているようで、実は人の気持ちに敏感だから、自然と輪の中心に立っている。ただ、みんなの期待に応えようとするあまり、疲れていても笑ってしまうところも。",
+ aru:["初対面でもすぐ打ち解けられる","集合写真はだいたい真ん中","沈黙が続くと、自分から話題を出してしまう","家に帰るとどっと疲れる日がある"],
+ love:"一緒に笑える人が一番。恋人とも友達のような関係が理想で、記念日はちゃんと盛り上げたいタイプ。",
+ gift:"場をまとめる力と、誰も置いていかない優しさ。",
+ warn:"たまには盛り上げ役を休んで、聞き役に回る日を作ろう。",
+ best:["wataame","全力で笑ったあと、そっと癒してくれる"],rival:["tower","どっちが主役か張り合ってしまう"],
+ quote:"丸いってことは、どこから見ても正面ってことさ。"},
+bakuhatsu:{name:"大爆発アフロ",nick:"制御不能の天才",color:"#e8352b",bg:"#ff9c5b",
+ catch:"思いついたら止まらない。それがあなたのエンジン。",
+ body:"ひらめいた瞬間には、もう動いている人。周りからは自由すぎると言われるけど、常識にとらわれないその発想が、誰も思いつかない結果を生む。興味のないことに本当に興味がないのも、正直さの証拠。",
+ aru:["部屋は散らかっているが、どこに何があるかは分かる","「なんでそうなった?」とよく聞かれる","やる気スイッチのON/OFFが極端","始めるのは得意、続けるのはちょっと苦手"],
+ love:"退屈な人とはどうしても続かない。振り回すことも多いけど、そのぶん相手にドキドキを与えられる人。",
+ gift:"発想力と行動力。ゼロから何かを生み出す力。",
+ warn:"爆発のあとは、片付けまでがワンセット。",
+ best:["sennin","暴走を笑って見守ってくれる"],rival:["mini","ペースが合わなすぎる"],
+ quote:"整えるより、爆発させたほうが早い。"},
+tower:{name:"天までタワーアフロ",nick:"天を目指す野心家",color:"#7a3cff",bg:"#c9b6ff",
+ catch:"目標は高く。髪も高く。",
+ body:"自分の中にはっきりした理想があって、そこへ向かって着実に積み上げていく人。周りに流されないぶん孤独を感じることもあるけど、気づけば誰より高い場所に立っている。負けず嫌いなのは、自分に一番厳しいから。",
+ aru:["目標を紙に書いたことがある","人と比べられるとスイッチが入る","中途半端な状態は見られたくない","褒められても「まだまだ」と思ってしまう"],
+ love:"尊敬できる相手にしか惹かれない。お互いを高め合える関係が理想。",
+ gift:"計画力と、最後までやり抜く根性。",
+ warn:"高く積むほど風は強い。休むのも戦略のうち。",
+ best:["torinosu","タワーの土台をしっかり支えてくれる"],rival:["maru","どっちが主役か張り合ってしまう"],
+ quote:"アフロは盛るものじゃない。積み上げるものだ。"},
+neon:{name:"ネオンアフロ",nick:"流行をつくる表現者",color:"#ff3d9a",bg:"#7ff0e4",
+ catch:"普通じゃつまらない。だから自分で色を塗る。",
+ body:"自分の見せ方をよく分かっていて、周りの反応まで計算できるセルフプロデュースの達人。派手に見えて実は研究熱心で、流行は追うものではなく作るものだと思っている。根っこにあるのは、人を楽しませたい気持ち。",
+ aru:["人とかぶるのが本当にいや","好きなものの話になると止まらない","写真の写り方にはこだわりがある","「センスいいね」が最高のほめ言葉"],
+ love:"自分らしさを面白がってくれる人に弱い。サプライズを仕掛けるのが好き。",
+ gift:"表現力と、トレンドを先読みする感覚。",
+ warn:"みんなの反応より、自分が楽しいかを大事に。",
+ best:["mini","派手さの裏側を分かってくれる"],rival:["bakuhatsu","同じステージで目立ち合ってしまう"],
+ quote:"色がないなら、つくればいい。"},
+torinosu:{name:"鳥の巣アフロ",nick:"みんなの帰る場所",color:"#3a9a4a",bg:"#bfe6a8",
+ catch:"気づけば誰かが住みついている、あったかい人。",
+ body:"困っている人を見ると、つい手を出してしまう根っからの世話好き。自分では目立たないつもりでも、なぜか人が集まってくる。頼られるのは嬉しいけど、自分のことが後回しになりがち。",
+ aru:["道をよく聞かれる","人の誕生日をよく覚えている","「大丈夫?」が口ぐせ","自分の悩みはあまり人に話さない"],
+ love:"尽くすタイプ。相手が喜ぶ顔を見るのが一番の幸せ。",
+ gift:"包容力と、人と人をつなぐ力。",
+ warn:"巣の主はあなた。自分の居心地も大事にして。",
+ best:["tower","がんばる背中を全力で応援したくなる"],rival:["sennin","マイペースすぎて心配になる"],
+ quote:"住みたいやつは、住めばいい。"},
+sennin:{name:"仙人アフロ",nick:"若くして悟った人",color:"#5c6b8a",bg:"#d9e2f2",
+ catch:"慌てない、比べない、なんとかなる。",
+ body:"周りが焦っていても、なぜか一人だけ落ち着いている人。直感を信じて生きているから、迷いが少ない。マイペースすぎて不思議がられることもあるけど、ふとした一言が誰かの心に深く刺さる。",
+ aru:["年上からも相談される","流行にあまり興味がない","ひとりの時間がないと回復しない","説明できない勘がよく当たる"],
+ love:"追いかけるより、自然に一緒にいる関係。長く続く恋が多い。",
+ gift:"直感力と、物事の本質を見抜く目。",
+ warn:"「なんとかなる」の前に、最低限の準備だけはしておこう。",
+ best:["bakuhatsu","暴走っぷりを見ているのが楽しい"],rival:["neon","「そこまで頑張らなくても」と思ってしまう"],
+ quote:"髪も人生も、伸びるときに伸びる。"},
+wataame:{name:"ふわふわ綿あめアフロ",nick:"やさしさのかたまり",color:"#ff7db0",bg:"#ffe0ee",
+ catch:"ふれた人みんなを、ふわっと軽くする。",
+ body:"人の話を最後までちゃんと聞ける、貴重な人。怒るより先に相手の事情を考えてしまうから、周りは安心して本音を話せる。争いごとが苦手で気持ちを飲みこむこともあるけど、そのやわらかさが一番の強さ。",
+ aru:["「話しやすい」とよく言われる","怒ったところをほとんど見られたことがない","頼まれると断るのが苦手","甘いものが心の支え"],
+ love:"穏やかで安心できる関係が理想。小さな気づかいにとても弱い。",
+ gift:"聞く力と、場の空気をやわらげる力。",
+ warn:"甘いだけじゃなく、たまには本音もトッピングして。",
+ best:["maru","一緒にいると自然と笑顔になれる"],rival:["bakuhatsu","勢いにびっくりしてしまう"],
+ quote:"ふわふわしてるけど、芯はちゃんとある。"},
+mini:{name:"ひかえめミニアフロ",nick:"小さく見えて、芯が一番強い",color:"#14807c",bg:"#a8e0d6",
+ catch:"目立たない。でも、ちゃんと全部見ている。",
+ body:"口数は少なめでも、頭の中ではいろいろ考えている観察家。慎重なのは失敗が怖いからではなく、本当に大事なものを選びたいから。信頼できる少数の人を大切にして、一度決めたことは最後まで貫く。",
+ aru:["大人数より少人数の集まりが好き","心の中のツッコミが多い","準備をしておかないと落ち着かない","好きなものには詳しすぎる"],
+ love:"時間をかけて好きになる。一度好きになったら、とことん一途。",
+ gift:"観察力と、ぶれない芯。",
+ warn:"小さくまとまらなくていい。たまにははみ出してみよう。",
+ best:["neon","自分にない世界を見せてくれる"],rival:["maru","明るすぎてちょっとまぶしい"],
+ quote:"小さいアフロにも、宇宙は入ってる。"},
+saito:{name:"アフロ斎藤",nick:"全アフロの頂点",color:"#c8961e",bg:"#2b1a12",secret:true,
+ catch:"おめでとう。あなたは選ばれしアフロだ。",
+ body:"8つのアフロすべての要素をあわせ持つ、伝説のリーダー気質。勢いと計画、派手さと優しさを自在に使い分けて、気づけばみんなを引っぱっている。この結果にたどり着ける人は、ほんのひと握り。",
+ aru:["気づけばリーダーをやっている","無茶ぶりされても、結局なんとかしてしまう","根拠のない自信がある","なぜか人の記憶に残る"],
+ love:"一緒に夢を追える相手が運命の人。言葉より背中で語るタイプ。",
+ gift:"人を巻き込む力と、どんな場面でもブレない存在感。",
+ warn:"伝説はひとりでは作れない。仲間を大事にね。",
+ best:["maru","最強のセンターコンビ"],rival:["tower","頂点の座を狙ってくる"],
+ quote:"アフロは髪型じゃない。生き方だ。"}
+};
+const ORDER = ["maru","bakuhatsu","tower","neon","torinosu","sennin","wataame","mini"];
+
+/* ===== 質問 =====
+ 各選択肢は2つの軸に効く(A/B/C = +1 or -1)。h:1 は隠しタイプの条件。
+ 軸ごとの出題数 A:6 B:7 C:7。Aの同点はQ9の重み1.5で決着。 */
+const Q = [
+{q:"朝、鏡を見たら寝ぐせが大爆発していた。",o:[
+ ["帽子をかぶって、何もなかったことにする",{A:-1,B:1}],
+ ["「今日はこれでいく」そのまま出かける",{A:1,B:1},1],
+ ["前の晩から対策しているので、そもそも起きない",{A:-1,B:-1}],
+ ["いっそ全部セットし直して、別人になって出かける",{A:1,B:-1}]]},
+{q:"休みの日の予定は、どうやって決める?",o:[
+ ["一週間前から、行きたい場所リストを作っている",{B:-1,C:-1}],
+ ["友達に誘われたら即OK。ノリで決める",{B:1,C:1}],
+ ["みんなの予定を合わせて、自分が幹事をする",{B:-1,C:1}],
+ ["起きた瞬間の気分で決める。ひとりで",{B:1,C:-1}]]},
+{q:"飲み会やイベントで、あなたはだいたいどこにいる?",o:[
+ ["真ん中で場を盛り上げている",{A:1,C:1}],
+ ["端っこの席で、静かに楽しんでいる",{A:-1,C:-1}],
+ ["みんなのグラスが空いていないか見ている",{A:-1,C:1}],
+ ["好きな話を全力でしていたら、周りが聞き入っていた",{A:1,C:-1}]]},
+{q:"急な頼みごとをされたら?",o:[
+ ["予定を確認して、できる範囲で引き受ける",{B:-1,C:1}],
+ ["気分が乗ればやる。乗らなければやらない",{B:1,C:-1}],
+ ["内容を聞く前に「いいよ!」と言っている",{B:1,C:1}],
+ ["自分の予定を崩してまではやらない",{B:-1,C:-1}]]},
+{q:"美容室で、髪型をどうする?",o:[
+ ["いつもと同じで。毛先だけちょっと変える",{A:-1,B:1}],
+ ["誰もやっていない髪型を研究していく",{A:1,B:-1}],
+ ["そもそも髪型を変える理由がない",{A:-1,B:-1}],
+ ["「アフロにしてください」",{A:1,B:1},1]]},
+{q:"SNSの使い方に近いのは?",o:[
+ ["見る専門。でも、いいねはこまめに押す",{A:-1,C:1}],
+ ["毎日投稿。友達の投稿にもすぐ反応する",{A:1,C:1}],
+ ["ほぼ見ない。通知もオフ",{A:-1,C:-1}],
+ ["自分の好きなことだけ、熱量高めに発信",{A:1,C:-1}]]},
+{q:"知らない街で道に迷った。",o:[
+ ["勘で進む。たいていなんとかなる",{B:1,C:-1}],
+ ["一緒にいる人と地図を見ながら進む",{B:-1,C:1}],
+ ["近くの人にすぐ聞く",{B:1,C:1}],
+ ["そもそも出発前にルートを完璧に調べてある",{B:-1,C:-1}]]},
+{q:"宝くじで1億円が当たった!",o:[
+ ["事業を始めて、もっと増やす",{A:1,B:-1}],
+ ["誰にも言わず、ふらっと旅に出る",{A:-1,B:1}],
+ ["とりあえず仲間全員におごる",{A:1,B:1},1],
+ ["誰にも言わず、生活は一切変えない",{A:-1,B:-1}]]},
+{q:"友達から見たあなたは、たぶん……",o:[
+ ["一緒にいると落ち着く人",{A:-1.5,C:1}],
+ ["何をするかわからない、おもしろい人",{A:1.5,C:-1}],
+ ["不思議な雰囲気の、謎の人",{A:-1.5,C:-1}],
+ ["いないと始まらない、ムードメーカー",{A:1.5,C:1}]]},
+{q:"最後の質問。あなたのアフロに何かが住みつくとしたら?",o:[
+ ["何も住ませない。私のアフロだから",{B:-1,C:-1}],
+ ["小鳥の家族。にぎやかでいい",{B:1,C:1}],
+ ["宇宙人。おもしろそうだから",{B:1,C:-1}],
+ ["友達みんなの忘れ物。ちゃんと預かっておく",{B:-1,C:1}]]}
+];
+
+/* ===== アフロの絵(SVG) ===== */
+function rng(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}}
+function puff(cx,cy,rx,ry,n,br,fill,seed,stroke="#2b1a12"){
+  const r=rng(seed);let out="";
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2,j=.86+r()*.18;
+    out+=`<circle cx="${(cx+Math.cos(a)*rx*j).toFixed(1)}" cy="${(cy+Math.sin(a)*ry*j).toFixed(1)}" r="${(br*(.8+r()*.4)).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;}
+  for(let i=0;i<n;i++){const a=i/n*Math.PI*2,j=.86+r()*.18;
+    out+=`<circle cx="${(cx+Math.cos(a)*rx*j).toFixed(1)}" cy="${(cy+Math.sin(a)*ry*j).toFixed(1)}" r="${(br*.8).toFixed(1)}" fill="${fill}"/>`;}
+  out+=`<ellipse cx="${cx}" cy="${cy}" rx="${rx*.93}" ry="${ry*.93}" fill="${fill}"/>`;
+  return out;
+}
+function curls(cx,cy,rx,ry,n,col,seed){const r=rng(seed);let o="";for(let i=0;i<n;i++){const a=r()*Math.PI*2,d=Math.sqrt(r())*.8;
+  const x=cx+Math.cos(a)*rx*d,y=cy+Math.sin(a)*ry*d;o+=`<path d="M${x.toFixed(1)} ${y.toFixed(1)} a4 4 0 1 1 6 3" fill="none" stroke="${col}" stroke-width="1.6" stroke-linecap="round"/>`}return o}
+
+function afro(k,small){
+  const t=T[k], id=k+(small?"s":"");
+  const ink="#2b1a12", skin="#d99a6c", dark="#3a2418";
+  let hair="", extra="", over="", face="", shirt=t.color;
+  let eyes=`<ellipse cx="86" cy="150" rx="4" ry="5.5" fill="${ink}"/><ellipse cx="114" cy="150" rx="4" ry="5.5" fill="${ink}"/><circle cx="87.5" cy="148" r="1.4" fill="#fff"/><circle cx="115.5" cy="148" r="1.4" fill="#fff"/>`;
+  let mouth=`<path d="M90 166 Q100 175 110 166" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;
+  let cheeks=`<ellipse cx="76" cy="163" rx="6" ry="3.5" fill="#ff7db0" opacity=".55"/><ellipse cx="124" cy="163" rx="6" ry="3.5" fill="#ff7db0" opacity=".55"/>`;
+  switch(k){
+    case "maru": hair=puff(100,100,74,66,20,20,dark,7)+curls(100,90,62,50,16,"#5a3826",3)+`<path d="M58 70 Q70 50 92 44" stroke="#7a5238" stroke-width="5" fill="none" stroke-linecap="round" opacity=".7"/>`;break;
+    case "bakuhatsu":{
+      let pts="";const r=rng(11);for(let i=0;i<26;i++){const a=i/26*Math.PI*2,rad=(i%2?58:88+r()*14);pts+=`${(100+Math.cos(a)*rad*1.05).toFixed(1)},${(100+Math.sin(a)*rad*.9).toFixed(1)} `}
+      hair=`<polygon points="${pts}" fill="${dark}" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/>`+puff(100,104,58,50,14,16,dark,5)+curls(100,96,56,44,14,"#5a3826",9);
+      extra=[[18,40],[176,34],[12,120],[186,118],[100,8]].map(([x,y])=>`<path d="M${x} ${y} l6 -10 M${x} ${y} l10 2 M${x} ${y} l-8 -6" stroke="${t.color}" stroke-width="3" stroke-linecap="round"/>`).join("");
+      eyes=`<circle cx="86" cy="150" r="7" fill="#fff" stroke="${ink}" stroke-width="2.5"/><circle cx="114" cy="150" r="7" fill="#fff" stroke="${ink}" stroke-width="2.5"/><circle cx="87" cy="151" r="3" fill="${ink}"/><circle cx="113" cy="151" r="3" fill="${ink}"/>`;
+      mouth=`<ellipse cx="100" cy="170" rx="7" ry="8" fill="${ink}"/><ellipse cx="100" cy="174" rx="4" ry="3" fill="#ff7db0"/>`;break;}
+    case "tower": hair=puff(100,70,52,70,22,17,dark,13)+curls(100,62,44,58,18,"#5a3826",4);
+      extra=`<path d="M100 2 l3 7 7 1 -5 5 1 7 -6 -3 -6 3 1 -7 -5 -5 7 -1z" fill="#ffd447" stroke="${ink}" stroke-width="2"/>`;
+      eyes=`<path d="M80 150 L92 148" stroke="${ink}" stroke-width="3.5" stroke-linecap="round"/><path d="M108 148 L120 150" stroke="${ink}" stroke-width="3.5" stroke-linecap="round"/><ellipse cx="86" cy="154" rx="3.5" ry="4" fill="${ink}"/><ellipse cx="114" cy="154" rx="3.5" ry="4" fill="${ink}"/>`;
+      mouth=`<path d="M90 168 Q102 174 112 164" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;break;
+    case "neon":{
+      const cols=["#ff3d9a","#ffd447","#2ee6d6","#7a3cff","#ff7a2e"];const r=rng(21);let h="";
+      for(let i=0;i<22;i++){const a=i/22*Math.PI*2,j=.86+r()*.18;h+=`<circle cx="${(100+Math.cos(a)*74*j).toFixed(1)}" cy="${(100+Math.sin(a)*66*j).toFixed(1)}" r="${(18+r()*6).toFixed(1)}" fill="${cols[i%5]}" stroke="${ink}" stroke-width="2.5"/>`}
+      hair=`<defs><radialGradient id="ng${id}" cx="50%" cy="40%"><stop offset="0" stop-color="#ffd447"/><stop offset=".5" stop-color="#ff3d9a"/><stop offset="1" stop-color="#7a3cff"/></radialGradient></defs>`+h+`<ellipse cx="100" cy="100" rx="68" ry="60" fill="#ff3d9a"/><ellipse cx="100" cy="96" rx="46" ry="38" fill="#ff7a2e" opacity=".55"/><ellipse cx="100" cy="92" rx="24" ry="20" fill="#ffd447" opacity=".6"/>`+curls(100,92,60,48,16,"#fff",8);
+      eyes=`<path d="M78 146 h16 v8 h-16z M106 146 h16 v8 h-16z M94 149 h12" fill="#2ee6d6" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>`;break;}
+    case "torinosu": hair=puff(100,104,72,58,20,19,"#4a2e1c",17)+curls(100,98,60,44,14,"#6e4a30",2);
+      extra=`<path d="M62 52 L140 42 M66 44 L134 56 M72 58 L128 38 M60 48 L120 60" stroke="#a87a3c" stroke-width="3" stroke-linecap="round"/>
+       <ellipse cx="100" cy="46" rx="34" ry="11" fill="#a87a3c" stroke="${ink}" stroke-width="2.5"/>
+       <g transform="translate(100 26)"><ellipse rx="17" ry="14" fill="#7fd36a" stroke="${ink}" stroke-width="2.5"/><circle cx="-6" cy="-14" r="10" fill="#7fd36a" stroke="${ink}" stroke-width="2.5"/><circle cx="-8" cy="-16" r="2.4" fill="${ink}"/><path d="M-16 -14 l-8 3 8 2z" fill="#ffb02e" stroke="${ink}" stroke-width="1.5" stroke-linejoin="round"/><path d="M4 -2 q10 -2 14 6" fill="none" stroke="${ink}" stroke-width="2"/></g>
+       <g transform="translate(134 40)"><circle r="7" fill="#ffd447" stroke="${ink}" stroke-width="2"/><circle cx="-2" cy="-2" r="1.4" fill="${ink}"/><path d="M-7 -1 l-5 2 5 1z" fill="#ffb02e"/></g>`;break;
+    case "sennin": hair=puff(100,100,74,64,20,20,"#f6f1e6",29)+curls(100,92,60,48,14,"#c9c2b4",6);
+      over=`<path d="M70 160 Q100 250 130 160 Q120 176 100 176 Q80 176 70 160Z" fill="#f6f1e6" stroke="${ink}" stroke-width="2.5"/><path d="M92 196 q8 10 4 24 M104 194 q6 12 0 26" fill="none" stroke="#c9c2b4" stroke-width="2"/>`;
+      eyes=`<path d="M78 140 q8 -6 16 0 M106 140 q8 -6 16 0" fill="none" stroke="#f6f1e6" stroke-width="6" stroke-linecap="round"/><path d="M80 151 q6 5 12 0 M108 151 q6 5 12 0" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;
+      mouth="";cheeks=`<ellipse cx="76" cy="160" rx="6" ry="3.5" fill="#ff7db0" opacity=".5"/><ellipse cx="124" cy="160" rx="6" ry="3.5" fill="#ff7db0" opacity=".5"/>`;break;
+    case "wataame": hair=puff(100,98,80,70,24,22,"#ffb6d5",31,"#c2477e")+puff(100,96,50,40,12,14,"#ffd3e6",33,"#ffd3e6");
+      extra=`<path d="M100 186 L100 240" stroke="#e8c48a" stroke-width="7"/>`.repeat(0)+[[26,40],[172,30],[180,150],[18,150]].map(([x,y])=>`<path d="M${x} ${y-8} L${x+2} ${y-2} ${x+8} ${y} ${x+2} ${y+2} ${x} ${y+8} ${x-2} ${y+2} ${x-8} ${y} ${x-2} ${y-2}Z" fill="#fff" stroke="${ink}" stroke-width="1.5"/>`).join("");
+      eyes=`<path d="M80 152 q6 -7 12 0 M108 152 q6 -7 12 0" fill="none" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;
+      cheeks=`<ellipse cx="76" cy="162" rx="8" ry="4.5" fill="#ff7db0" opacity=".7"/><ellipse cx="124" cy="162" rx="8" ry="4.5" fill="#ff7db0" opacity=".7"/>`;break;
+    case "mini": hair=puff(100,108,44,30,12,13,dark,41)+curls(100,104,34,18,6,"#5a3826",5);
+      eyes=`<circle cx="87" cy="152" r="3.6" fill="${ink}"/><circle cx="113" cy="152" r="3.6" fill="${ink}"/>`;
+      mouth=`<path d="M94 167 h12" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;break;
+    case "saito": hair=puff(100,98,80,70,22,21,"#120c09",51,"#000")+curls(100,90,66,52,18,"#3b2a20",12);
+      extra=`<path d="M78 34 L80 14 L91 26 L100 8 L109 26 L120 14 L122 34Z" fill="#ffd447" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="27" r="3" fill="#ff3d3d"/>`;
+      eyes=`<path d="M78 150 q8 -8 16 0 M106 150 q8 -8 16 0" fill="none" stroke="${ink}" stroke-width="3.5" stroke-linecap="round"/>`;
+      mouth=`<path d="M86 164 Q100 180 114 164Z" fill="${ink}"/><path d="M90 166 Q100 171 110 166" fill="#fff"/>`;
+      shirt="#c8961e";break;
+  }
+  // サンバースト
+  let rays="";for(let i=0;i<16;i++){const a1=i/16*Math.PI*2,a2=(i+.5)/16*Math.PI*2;
+    rays+=`<path d="M100 120 L${(100+Math.cos(a1)*300).toFixed(1)} ${(120+Math.sin(a1)*300).toFixed(1)} L${(100+Math.cos(a2)*300).toFixed(1)} ${(120+Math.sin(a2)*300).toFixed(1)}Z" fill="#fff" opacity="${t.secret?.07:.28}"/>`;}
+  const neck=`<path d="M88 182 L88 200 L112 200 L112 182Z" fill="${skin}" stroke="${ink}" stroke-width="2.5"/>`;
+  const body=`<path d="M30 240 C34 210 60 196 100 196 C140 196 166 210 170 240Z" fill="${shirt}" stroke="${ink}" stroke-width="3"/><path d="M86 197 L100 214 L114 197" fill="none" stroke="${ink}" stroke-width="2.5"/>`;
+  face=`<ellipse cx="100" cy="152" rx="36" ry="38" fill="${skin}" stroke="${ink}" stroke-width="3"/><ellipse cx="64" cy="154" rx="6" ry="9" fill="${skin}" stroke="${ink}" stroke-width="2.5"/><ellipse cx="136" cy="154" rx="6" ry="9" fill="${skin}" stroke="${ink}" stroke-width="2.5"/>`;
+  const fringe = k==="mini"?"":`<path d="M68 132 Q100 108 132 132 Q120 118 100 118 Q80 118 68 132Z" fill="${k==="sennin"?"#f6f1e6":k==="wataame"?"#ffb6d5":k==="neon"?"#ff3d9a":k==="saito"?"#120c09":k==="torinosu"?"#4a2e1c":dark}"/>`;
+  return `<svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${t.name}">
+   <rect width="200" height="240" fill="${t.bg}"/>${rays}
+   ${hair}${extra}${neck}${body}${face}${fringe}${eyes}${cheeks}${mouth}${over}
+   ${t.secret&&!small?`<text x="100" y="232" text-anchor="middle" font-family="Dela Gothic One, sans-serif" font-size="12" fill="#ffd447" letter-spacing="3">SECRET</text>`:""}
+  </svg>`;
+}
+
+/* ===== 判定 ===== */
+let step=0,answers=[];
+function judge(){
+  const s={A:0,B:0,C:0},tot={A:0,B:0,C:0},pos={A:0,B:0,C:0};
+  answers.forEach((a,i)=>{const w=Q[i].o[a][1];for(const ax in w){s[ax]+=w[ax];tot[ax]+=Math.abs(w[ax]);if(w[ax]>0)pos[ax]+=w[ax];}});
+  const code=(s.A>0?"+":"-")+(s.B>0?"+":"-")+(s.C>0?"+":"-");
+  const secret=answers.every((a,i)=>!Q[i].o.some(o=>o[2])||Q[i].o[a][2]===1);
+  const pct={A:Math.round(pos.A/tot.A*100),B:Math.round(pos.B/tot.B*100),C:Math.round(pos.C/tot.C*100)};
+  return {key:secret?"saito":TYPES[code],pct};
+}
+
+/* ===== 画面 ===== */
+const app=document.getElementById("app");
+const KANA=["A","B","C","D"];
+function setColor(k){document.documentElement.style.setProperty("--type",T[k].color)}
+function roster(){
+  return `<div class="roster">${ORDER.map(k=>`<button data-k="${k}">${afro(k,true)}<span>${T[k].name}</span></button>`).join("")}<button data-k="??" aria-label="隠しタイプ"><span class="lock">${afro("saito",true)}</span><span>??? 隠しタイプ</span></button></div>`;
+}
+function bindRoster(){app.querySelectorAll(".roster button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.k==="??"){const n=b.querySelector("span:last-child");n.textContent="診断でしか出会えない";return}
+  result(b.dataset.k,null)});}
+
+function intro(){
+  setColor("maru");
+  app.innerHTML=`<a class="toplink" href="../">← 診断一覧へ</a>
+  <section class="hero fade">
+    <span class="stamp">AFRO TYPE TEST</span>
+    <h1><small>10の質問でわかる</small>あなたは<br>どのタイプの<br>アフロ?</h1>
+    <div class="heroart">${afro("maru")}</div>
+    <p class="lede">性格は髪に出る。あなたの心の形をアフロで診断します。直感で選ぶほど、よく当たります。</p>
+    <button class="cta" id="start">診断スタート</button>
+    <p class="meta">全10問 ・ 約1分 ・ 8タイプ+激レア隠しタイプ</p>
+    <a class="xpost" href="${introShare()}" target="_blank" rel="noopener">${XICON}この診断をXでポスト</a>
+  </section>
+  <p class="label">8つのアフロ</p>${roster()}`;
+  document.getElementById("start").onclick=()=>{step=0;answers=[];ask()};
+  bindRoster();scrollTo(0,0);
+}
+
+function ask(){
+  const q=Q[step];
+  app.innerHTML=`<div class="qhead fade"><div class="qbadge">${step+1}</div><div class="dots" aria-label="${step+1}問目 / 全${Q.length}問">${Q.map((_,i)=>`<i class="${i<=step?"on":""}"></i>`).join("")}</div></div>
+  <h2 class="qtext fade">${q.q}</h2>
+  <div class="opts fade">${q.o.map((o,i)=>`<button class="opt${answers[step]===i?" picked":""}" data-i="${i}"><span class="k">${KANA[i]}</span><span>${o[0]}</span></button>`).join("")}</div>
+  ${step>0?`<button class="back" id="back">← ひとつ前に戻る</button>`:""}`;
+  app.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{answers[step]=+b.dataset.i;b.classList.add("picked");
+    setTimeout(()=>{if(step<Q.length-1){step++;ask()}else loading()},170)});
+  const bk=document.getElementById("back");if(bk)bk.onclick=()=>{step--;ask()};
+  scrollTo(0,0);
+}
+
+function loading(){
+  const r=judge();
+  app.innerHTML=`<div class="load fade"><svg viewBox="0 0 120 120" aria-hidden="true">${puff(60,60,40,36,14,13,"#3a2418",3)}<circle cx="60" cy="64" r="16" fill="#d99a6c" stroke="#2b1a12" stroke-width="3"/></svg><p>あなたのアフロを分析中……</p></div>`;
+  scrollTo(0,0);setTimeout(()=>result(r.key,r.pct),1500);
+}
+
+const XICON=`<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`;
+function introShare(){
+  const txt="性格は髪に出る。\nあなたはどのタイプのアフロ?\n10問でわかる #アフロ診断\n激レアの隠しタイプもあるらしい";
+  return "https://x.com/intent/post?text="+encodeURIComponent(txt)+"&url="+encodeURIComponent(location.origin+location.pathname);
+}
+function shareURL(k){return location.origin+location.pathname.replace(/index\.html$/,"")+"r/"+k+"/"}
+function shareHref(k){
+  const t=T[k];
+  const txt=t.secret
+   ?`激レア!隠しタイプ【${t.name}】が出た!\n「${t.catch}」\n\nあなたはどのタイプのアフロ?\n#アフロ診断`
+   :`私は【${t.name}】でした!\n${t.nick}\n「${t.catch}」\n\nあなたはどのタイプのアフロ?\n#アフロ診断`;
+  return "https://x.com/intent/post?text="+encodeURIComponent(txt)+"&url="+encodeURIComponent(shareURL(k));
+}
+
+function result(k,pct,shared){
+  const t=T[k];setColor(k);
+  const mine=!!pct;
+  const ax=(lab,l,r,p)=>`<div class="ax"><span class="l ${p>=50?"on":"off"}">${l}</span><div class="track"><i style="width:${p}%"></i></div><span class="r ${p<50?"on":"off"}">${r}</span><span class="pct">${lab} ${p}%</span></div>`;
+  const axes=mine?`<div class="axes"><p class="t">あなたのアフロ成分</p>${ax("派手度","派手","控えめ",pct.A)}${ax("直感度","直感","計画",pct.B)}${ax("みんな度","みんな","ひとり",pct.C)}</div>`:"";
+  const pair=(x,l)=>`<button data-k="${x[0]}">${afro(x[0],true)}<span class="lbl">${l}</span><span class="nm">${T[x[0]].name}</span><span>${x[1]}</span></button>`;
+  app.innerHTML=`<a class="toplink" href="../">← 診断一覧へ</a>
+  <article class="card fade">
+    <div class="rtop">${t.secret?`<span class="secret">SECRET TYPE</span>`:""}<p class="you">${mine?"あなたは……":shared?"この人のアフロは……":"アフロ図鑑"}</p><h2>${t.name}</h2><span class="nick">${t.nick}</span></div>
+    <div class="portrait">${afro(k)}</div>
+    <p class="catch">${t.catch}</p>
+    ${axes}
+    <div class="sec"><h3>どんな人?</h3><p>${t.body}</p></div>
+    <div class="sec"><h3>あるある</h3><ul class="aru">${t.aru.map(a=>`<li>${a}</li>`).join("")}</ul></div>
+    <div class="sec"><h3>恋愛</h3><p>${t.love}</p></div>
+    <div class="sec"><h3>才能</h3><p>${t.gift}</p></div>
+    <div class="sec"><h3>ひとことアドバイス</h3><p>${t.warn}</p></div>
+    <div class="sec"><h3>相性</h3><div class="pair">${pair(t.best,"最高の相棒")}${pair(t.rival,"ライバル")}</div></div>
+    <p class="quote"><small>アフロ語録</small>「${t.quote}」</p>
+  </article>
+  <div class="actions">
+    ${mine?`<a class="share" href="${shareHref(k)}" target="_blank" rel="noopener"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>結果をXでシェア</a>
+    <button class="ghost" id="copy">結果のリンクをコピー</button><p class="toast" id="toast" hidden></p>`:""}
+    <button class="ghost" id="again">${mine?"もう一度診断する":"自分のアフロを診断する"}</button>
+  </div>
+  <p class="label">ほかのアフロも見る</p>${roster()}
+  <p class="note">この診断はエンターテインメントです。</p>`;
+  bindRoster();
+  app.querySelectorAll(".pair button").forEach(b=>b.onclick=()=>result(b.dataset.k,null));
+  document.getElementById("again").onclick=()=>{step=0;answers=[];if(mine)ask();else intro()};
+  const cp=document.getElementById("copy");
+  if(cp)cp.onclick=()=>{const u=shareURL(k),ts=document.getElementById("toast");
+    const ok=()=>{ts.hidden=false;ts.textContent="コピーしました"};
+    try{navigator.clipboard.writeText(u).then(ok,()=>{ts.hidden=false;ts.textContent=u})}catch(e){ts.hidden=false;ts.textContent=u}};
+  scrollTo(0,0);
+}
+
+const h=(location.hash||"").slice(1);
+if(T[h]) result(h,null,true); else intro();
+</script>
+</body>
+</html>
