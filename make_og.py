@@ -31,24 +31,10 @@ def afro_tpl(svg,t,intro=False):
     .sec{{align-self:flex-start;background:#ffd447;color:#2b1a12;font-weight:900;font-size:24px;letter-spacing:.3em;padding:4px 16px;border-radius:6px}}</style>
     </div></body></html>'''
 
-def akuma_tpl(svg,d,intro=False):
-    c=d['color'] if not intro else '#c9a45c'
-    head='あなたに宿る悪魔は' if not intro else '十の問いでわかる'
-    name=d['name'] if not intro else 'あなたに宿る<br>悪魔診断'
-    sub='' if intro else f'<div style="font-size:34px;color:{c}">{d["sin"]} ・ {d["title"]}</div>'
-    lead='あなたの魂と契約している悪魔は?' if intro else d['lead']
-    return f'''<html><body style="margin:0"><div style="width:1200px;height:630px;background:radial-gradient(ellipse at 30% 40%,{c}33,#0f0b15 65%);background-color:#0f0b15;color:#ece3d3;font-family:{SERIF};display:flex;align-items:center;gap:60px;padding:0 70px;box-sizing:border-box">
-    <div style="flex:none;width:380px;line-height:0;box-shadow:0 0 0 8px #0f0b15,0 0 0 10px {c}66">{svg}</div>
-    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
-      <div style="font-size:28px;letter-spacing:.3em;color:#a093ab">{head}</div>
-      <div style="font-size:{80 if intro else 92}px;font-weight:700;line-height:1.15;letter-spacing:.04em">{name}</div>
-      {sub}<div style="font-family:{JP};font-size:30px;line-height:1.55">{lead}</div>
-      <div style="font-family:{JP};font-size:22px;letter-spacing:.2em;color:#a093ab">#悪魔診断</div></div></div></body></html>'''
-
 def top_tpl():
     return f'''<html><body style="margin:0"><div style="width:1200px;height:630px;background:#f3eee6;font-family:{JP};color:#1f1a24;display:flex;flex-direction:column;justify-content:center;padding:0 90px;box-sizing:border-box;gap:24px">
     <div style="font-weight:900;font-size:120px;line-height:1.1">ふしぎ診断所</div><div style="font-weight:700;font-size:40px;color:#6d6575">10問で答えがわかる、ちょっと変わった性格診断。</div>
-    <div style="display:flex;gap:16px"><span style="background:#f6c945;border:4px solid #1f1a24;border-radius:999px;padding:6px 26px;font-weight:900;font-size:30px">アフロ診断</span><span style="background:#0f0b15;color:#e8c36a;border-radius:999px;padding:8px 28px;font-weight:900;font-size:30px">悪魔診断</span></div></div></body></html>'''
+    <div style="display:flex;gap:16px"><span style="background:#f6c945;border:4px solid #1f1a24;border-radius:999px;padding:6px 26px;font-weight:900;font-size:30px">アフロ診断</span></div></div></body></html>'''
 
 def share_page(path_back,key,title,desc,img,url):
     e=html.escape
@@ -84,16 +70,6 @@ with sync_playwright() as p:
         open(f'{d}/index.html','w').write(share_page('../../',k,title,t['catch']+' あなたはどのタイプのアフロ?',f'{SITE}/afro/og/{k}.png',f'{SITE}/afro/r/{k}/'))
     render(afro_tpl(pg.evaluate('afro("maru")'),T['maru'],True),f'{ROOT}/afro/og/intro.png')
     set_head_meta(f'{ROOT}/afro/index.html',f'{SITE}/afro/og/intro.png',f'{SITE}/afro/')
-    # 悪魔
-    pg.goto('http://127.0.0.1:8766/akuma/'); pg.wait_for_timeout(300)
-    D=pg.evaluate('D'); os.makedirs(f'{ROOT}/akuma/og',exist_ok=True)
-    for k,dd in D.items():
-        svg=pg.evaluate('k=>portrait(k)',k); i=dd['id']
-        render(akuma_tpl(svg,dd),f'{ROOT}/akuma/og/{i}.png')
-        d=f'{ROOT}/akuma/r/{i}'; os.makedirs(d,exist_ok=True)
-        open(f'{d}/index.html','w').write(share_page('../../',i,f'私に宿る悪魔は【{dd["name"]}】|悪魔診断',dd['lead']+' あなたに宿る悪魔は?',f'{SITE}/akuma/og/{i}.png',f'{SITE}/akuma/r/{i}/'))
-    render(akuma_tpl(pg.evaluate('portrait("L")'),D['L'],True),f'{ROOT}/akuma/og/intro.png')
-    set_head_meta(f'{ROOT}/akuma/index.html',f'{SITE}/akuma/og/intro.png',f'{SITE}/akuma/')
     render(top_tpl(),f'{ROOT}/og.png')
     set_head_meta(f'{ROOT}/index.html',f'{SITE}/og.png',f'{SITE}/')
     b.close()
