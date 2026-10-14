@@ -46,7 +46,7 @@ button,a{font-family:var(--body)}
 .hero h1 small{display:block;font-size:.5em;text-shadow:none;color:var(--ink-soft);letter-spacing:.1em;margin-bottom:6px}
 .hero .lede{max-width:28em;font-weight:700;color:var(--ink-soft)}
 .heroart{width:min(260px,70%);aspect-ratio:200/240;max-width:100%}
-.heroart svg{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.heroart svg,.heroart img{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
 .cta{appearance:none;cursor:pointer;border:3px solid var(--ink);background:var(--hot);color:#fff;font-family:var(--display);font-size:19px;letter-spacing:.08em;
   padding:14px 40px;border-radius:999px;box-shadow:4px 4px 0 var(--ink);transition:transform .12s,box-shadow .12s}
 .cta:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
@@ -59,8 +59,8 @@ button,a{font-family:var(--body)}
 .roster button{appearance:none;cursor:pointer;border:2.5px solid var(--ink);background:var(--paper);border-radius:14px;padding:6px 6px 8px;color:var(--ink);
   display:flex;flex-direction:column;gap:4px;align-items:center;font-weight:800;font-size:12px;line-height:1.3;text-align:center;transition:transform .12s}
 .roster button:hover{transform:translateY(-2px)}
-.roster svg{width:100%;height:auto;display:block;border-radius:9px}
-.roster .lock{filter:brightness(0) opacity(.75)}
+.roster svg,.roster img{width:100%;height:auto;aspect-ratio:240/298;object-fit:cover;display:block;border-radius:9px}
+.roster .lock{filter:brightness(0) opacity(.75);display:block}
 
 /* quiz */
 .qhead{display:flex;align-items:center;gap:12px}
@@ -90,7 +90,7 @@ button,a{font-family:var(--body)}
 .rtop .nick{display:inline-block;background:var(--type);color:#fff;font-weight:800;font-size:13.5px;padding:3px 14px;border-radius:999px;border:2px solid var(--ink)}
 .secret{display:inline-block;font-family:var(--display);font-size:12px;letter-spacing:.25em;background:var(--ink);color:#ffd447;padding:3px 12px;border-radius:4px}
 .portrait{width:min(100%,280px);margin:0 auto}
-.portrait svg{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink)}
+.portrait svg,.portrait img{width:100%;height:auto;display:block;border-radius:18px;border:3px solid var(--ink)}
 .catch{font-family:var(--display);font-size:clamp(18px,5vw,21px);line-height:1.6;text-align:center;word-break:auto-phrase}
 .axes{display:flex;flex-direction:column;gap:10px;background:rgba(43,26,18,.05);border-radius:14px;padding:14px}
 .axes .t{font-family:var(--display);font-size:13px;letter-spacing:.1em}
@@ -109,7 +109,7 @@ button,a{font-family:var(--body)}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pair button{appearance:none;cursor:pointer;border:2.5px solid var(--ink);background:#fff;border-radius:14px;padding:8px 6px 10px;color:var(--ink);
   display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:12px;line-height:1.45}
-.pair svg{width:64px;height:auto;border-radius:10px;border:2px solid var(--ink)}
+.pair svg,.pair img{width:64px;height:auto;border-radius:10px;border:2px solid var(--ink)}
 .pair .lbl{font-weight:800;font-size:11px;color:var(--ink-soft)}
 .pair .nm{font-family:var(--display);font-size:14.5px}
 .quote{text-align:center;border-top:2.5px dashed var(--ink);padding-top:16px;font-family:var(--display);font-size:17px;line-height:1.7;word-break:auto-phrase}
@@ -352,6 +352,12 @@ function afro(k,small){
   </svg>`;
 }
 
+/* ===== 画像(読み込めないときは手描きSVGに切り替え) ===== */
+function pic(k,small,eager){
+  return `<img src="img/${small?"s/":""}${k}.jpg" alt="${T[k].name}" data-k="${k}" data-s="${small?1:0}" width="${small?240:600}" height="${small?298:745}"${eager?"":' loading="lazy"'}>`;
+}
+document.addEventListener("error",e=>{const el=e.target;if(el.tagName==="IMG"&&el.dataset.k){el.outerHTML=afro(el.dataset.k,el.dataset.s==="1")}},true);
+
 /* ===== 判定 ===== */
 let step=0,answers=[];
 function judge(){
@@ -368,7 +374,7 @@ const app=document.getElementById("app");
 const KANA=["A","B","C","D"];
 function setColor(k){document.documentElement.style.setProperty("--type",T[k].color)}
 function roster(){
-  return `<div class="roster">${ORDER.map(k=>`<button data-k="${k}">${afro(k,true)}<span>${T[k].name}</span></button>`).join("")}<button data-k="??" aria-label="隠しタイプ"><span class="lock">${afro("saito",true)}</span><span>??? 隠しタイプ</span></button></div>`;
+  return `<div class="roster">${ORDER.map(k=>`<button data-k="${k}">${pic(k,true)}<span>${T[k].name}</span></button>`).join("")}<button data-k="??" aria-label="隠しタイプ"><span class="lock">${pic("saito",true)}</span><span>??? 隠しタイプ</span></button></div>`;
 }
 function bindRoster(){app.querySelectorAll(".roster button").forEach(b=>b.onclick=()=>{
   if(b.dataset.k==="??"){const n=b.querySelector("span:last-child");n.textContent="診断でしか出会えない";return}
@@ -380,7 +386,7 @@ function intro(){
   <section class="hero fade">
     <span class="stamp">AFRO TYPE TEST</span>
     <h1><small>10の質問でわかる</small>あなたは<br>どのタイプの<br>アフロ?</h1>
-    <div class="heroart">${afro("maru")}</div>
+    <div class="heroart">${pic("maru",false,true)}</div>
     <p class="lede">性格は髪に出る。あなたの心の形をアフロで診断します。直感で選ぶほど、よく当たります。</p>
     <button class="cta" id="start">診断スタート</button>
     <p class="meta">全10問 ・ 約1分 ・ 8タイプ+激レア隠しタイプ</p>
@@ -428,11 +434,11 @@ function result(k,pct,shared){
   const mine=!!pct;
   const ax=(lab,l,r,p)=>`<div class="ax"><span class="l ${p>=50?"on":"off"}">${l}</span><div class="track"><i style="width:${p}%"></i></div><span class="r ${p<50?"on":"off"}">${r}</span><span class="pct">${lab} ${p}%</span></div>`;
   const axes=mine?`<div class="axes"><p class="t">あなたのアフロ成分</p>${ax("派手度","派手","控えめ",pct.A)}${ax("直感度","直感","計画",pct.B)}${ax("みんな度","みんな","ひとり",pct.C)}</div>`:"";
-  const pair=(x,l)=>`<button data-k="${x[0]}">${afro(x[0],true)}<span class="lbl">${l}</span><span class="nm">${T[x[0]].name}</span><span>${x[1]}</span></button>`;
+  const pair=(x,l)=>`<button data-k="${x[0]}">${pic(x[0],true)}<span class="lbl">${l}</span><span class="nm">${T[x[0]].name}</span><span>${x[1]}</span></button>`;
   app.innerHTML=`<a class="toplink" href="../">← 診断一覧へ</a>
   <article class="card fade">
     <div class="rtop">${t.secret?`<span class="secret">SECRET TYPE</span>`:""}<p class="you">${mine?"あなたは……":shared?"この人のアフロは……":"アフロ図鑑"}</p><h2>${t.name}</h2><span class="nick">${t.nick}</span></div>
-    <div class="portrait">${afro(k)}</div>
+    <div class="portrait">${pic(k,false,true)}</div>
     <p class="catch">${t.catch}</p>
     ${axes}
     <div class="sec"><h3>どんな人?</h3><p>${t.body}</p></div>
