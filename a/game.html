@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ピカピカ泥団子</title>
+<meta name="description" content="泥をこねて、水と砂を足して、ピカピカになるまで磨く。100点満点で採点される泥団子づくりゲーム。">
+<meta name="theme-color" content="#bcdde9">
+<meta property="og:title" content="ピカピカ泥団子">
+<meta property="og:description" content="泥をこねて磨いて、100点満点で採点。あなたの泥団子は何点?">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://amazing-dusk-b8e52b.netlify.app/dorodango/">
+<meta property="og:image" content="https://amazing-dusk-b8e52b.netlify.app/dorodango/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://amazing-dusk-b8e52b.netlify.app/dorodango/og.png">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Maru+Gothic:wght@500;700&display=swap">
+<style>
+/* 校庭の砂場、夏の午後。下は方眼ノートの操作パネル。単一の世界観なのでテーマは固定 */
+:root{
+  --sky:#bcdde9; --haze:#e6f2f2; --sand:#e4cc98; --sand-deep:#c8a66a;
+  --ink:#2b1d13; --ink-soft:#6f5a47; --paper:#fffaf0; --grid:rgba(60,110,150,.11);
+  --hat:#f5c518; --hat-ink:#3b2c00; --water:#2c6da3; --rare:#7a3fa0;
+  --f-display:"Mochiy Pop One","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+  --f-body:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+  color-scheme:light;
+}
+html{height:100%;background:linear-gradient(var(--sky) 50%,var(--paper) 50%)}
+body{height:100%;margin:0;overflow:hidden;padding-block:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:var(--sky);color:var(--ink);font-family:var(--f-body);
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px 8px}
+.brand{font-family:var(--f-display);font-size:16px;letter-spacing:.02em;white-space:nowrap}
+.steps{display:flex;gap:3px;margin:0;padding:0;list-style:none}
+.steps li{width:20px;height:20px;font-size:11px!important;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;
+  border:1.5px solid var(--ink-soft);color:var(--ink-soft);background:transparent}
+.steps li.done{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.steps li.now{background:var(--hat);border-color:var(--ink);color:var(--hat-ink)}
+#stage{position:relative;flex:1;min-height:0;border-radius:18px;overflow:hidden;touch-action:none;
+  background:linear-gradient(180deg,var(--sky) 0%,var(--haze) 67%,var(--sand) 67.4%,var(--sand-deep) 100%)}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#fx{pointer-events:none}
+#hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);padding:6px 14px;border-radius:999px;
+  background:rgba(255,250,240,.88);border:1.5px solid var(--ink);font-family:var(--f-display);font-size:14px;
+  white-space:nowrap;pointer-events:none;transition:opacity .4s}
+#toast{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;
+  font-family:var(--f-display);font-size:26px;color:var(--ink);background:var(--paper);border:2px solid var(--ink);
+  padding:10px 18px;border-radius:16px;box-shadow:0 4px 0 var(--ink);transition:opacity .2s,transform .2s;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#panel{margin-top:10px;padding:14px 16px 16px;border-radius:18px 18px 0 0;background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:18px 18px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.ask{margin:0;font-family:var(--f-display);font-size:16px;line-height:1.5;text-wrap:balance}
+.sub{margin:0;font-size:14px;color:var(--ink-soft);font-weight:700}
+.sub b{color:var(--ink)}
+.row{display:flex;gap:10px}
+.btn{flex:1;min-height:52px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);
+  font-size:16px;padding:10px 12px;border-radius:14px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);
+  box-shadow:0 4px 0 var(--ink);cursor:pointer;touch-action:manipulation;text-decoration:none;transition:transform .06s,box-shadow .06s}
+.btn:active,.btn.pressed{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.primary{background:var(--hat);color:var(--hat-ink)}
+.btn.blue{background:var(--water);color:#fff}
+.btn:focus-visible,.soil:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.meter{height:12px;border-radius:6px;border:1.5px solid var(--ink);background:var(--paper);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--hat);transition:width .1s linear}
+.meter.sun i{background:#e8873a}
+.soils{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.soil{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px 12px;border-radius:14px;
+  border:2px solid var(--ink);background:var(--paper);box-shadow:0 4px 0 var(--ink);cursor:pointer;color:var(--ink);font-family:var(--f-body)}
+.soil:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.soil .sw{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--ink)}
+.soil b{font-family:var(--f-display);font-size:15px;font-weight:400}
+.soil small{font-size:12px;color:var(--ink-soft);line-height:1.35;text-align:center;font-weight:700}
+.bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;height:28px;align-items:end}
+.bars i{display:block;background:var(--sand-deep);border-radius:2px 2px 0 0;height:2px;transition:height .1s}
+.bars i.over{background:#b5653a}
+.res-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tier{font-family:var(--f-display);font-size:13px;padding:3px 10px;border-radius:999px;background:var(--ink);color:var(--paper)}
+.tier.top{background:var(--hat);color:var(--hat-ink);border:1.5px solid var(--ink)}
+.tier.rare{background:var(--rare);color:#fff}
+.soil-tag{font-size:13px;color:var(--ink-soft);font-weight:700}
+.res-name{margin:0;font-family:var(--f-display);font-size:26px;line-height:1.25;text-wrap:balance}
+.res-comment{margin:0;font-size:16px;font-weight:700}
+.hbtn{font-family:var(--f-display);font-size:13px;padding:5px 10px;border-radius:999px;border:1.5px solid var(--ink);background:var(--paper);color:var(--ink);cursor:pointer;white-space:nowrap}
+.hbtn:focus-visible{outline:3px solid var(--water);outline-offset:2px}
+.hright{display:flex;align-items:center;gap:8px;min-width:0}
+#panel.result{max-height:64%;overflow-y:auto}
+.score-line{display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums}
+.score{font-family:var(--f-display);font-size:44px;line-height:1}
+.unit{font-family:var(--f-display);font-size:18px}
+.bd{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.bd div{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.bd b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+.bd i{display:block;height:5px;border-radius:3px;background:rgba(43,29,19,.12);overflow:hidden}
+.bd i::after{content:"";display:block;height:100%;width:var(--w);background:var(--ink)}
+.reg{display:flex;gap:8px}
+.reg input{flex:1;min-width:0;font-family:var(--f-body);font-weight:700;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
+.reg input:focus-visible{outline:3px solid var(--water);outline-offset:1px}
+.reg .btn{flex:0 0 auto}
+.msg{margin:0;font-size:13px;font-weight:700;color:var(--ink-soft);min-height:1em}
+.msg.err{color:#b3261e}
+.rank-title{margin:0;font-family:var(--f-display);font-size:20px;font-weight:400}
+.rank-mode{margin:0;font-size:12px;font-weight:700;color:var(--ink-soft)}
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;overflow-y:auto;min-height:0}
+.rank li{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 4px;border-bottom:1px dashed rgba(43,29,19,.2)}
+.rank li.me{background:rgba(245,197,24,.28);border-radius:8px}
+.rank .no{font-family:var(--f-display);font-size:18px;text-align:center;font-variant-numeric:tabular-nums}
+.rank li:nth-child(1) .no{color:#b8860b}
+.rank .nm{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .rs{grid-column:2;font-size:12px;color:var(--ink-soft);font-weight:700}
+.rank .sc{grid-column:3;grid-row:1/3;font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+.modal{position:fixed;inset:0;background:rgba(43,29,19,.6);display:flex;align-items:center;justify-content:center;
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:10}
+.sheet{background:var(--paper);border:2px solid var(--ink);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:420px;width:100%;max-height:100%}
+.sheet img{width:100%;height:auto;border-radius:10px;min-height:0;object-fit:contain;-webkit-user-select:auto;user-select:auto;-webkit-touch-callout:default}
+.sheet p{margin:0;font-size:13px;font-weight:700;color:var(--ink-soft);text-align:center}
+.err{margin:auto;padding:24px;text-align:center;font-weight:700}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div id="app">
+  <header>
+    <div class="brand">ピカピカ泥団子</div>
+    <div class="hright">
+      <ol class="steps" id="steps" aria-label="工程">
+        <li>土</li><li>丸</li><li>水</li><li>砂</li><li>乾</li><li>磨</li><li>完</li>
+      </ol>
+      <button class="hbtn" id="rankOpen">順位</button>
+    </div>
+  </header>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <canvas id="fx"></canvas>
+    <div id="hint" hidden></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+  <section id="panel"></section>
+</div>
+<div id="rankM" class="modal" hidden>
+  <div class="sheet">
+    <h2 class="rank-title">ランキング TOP10</h2>
+    <p class="rank-mode" id="rankMode"></p>
+    <ol class="rank" id="rankList"></ol>
+    <p class="rank-mode" id="rankEmpty" hidden>まだ記録がありません。最初の1位になろう</p>
+    <button class="btn" id="closeR">閉じる</button>
+  </div>
+</div>
+<div id="modal" class="modal" hidden>
+  <div class="sheet">
+    <img id="cardImg" alt="泥団子の結果カード">
+    <p>画像を長押し(PCは右クリック)で保存できます</p>
+    <button class="btn" id="closeM">閉じる</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+/* 公開したらここにゲームのURLを入れる(Xのシェア文にリンクが付く) */
+const GAME_URL = 'https://amazing-dusk-b8e52b.netlify.app/dorodango/';
+
+/* 手ざわりの長さ。丸めは8周、磨きは約30回なぞると満タン */
+const ROUND_LAPS = 8, POLISH_RATE = .00014, OVERRUB = 27000, SAND_SPIN = .75, INERTIA = .965;
+
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+if(!window.THREE){ $('#panel').innerHTML='<p class="err">3D表示を読み込めませんでした。通信状態を確認して、ページを開き直してください。</p>'; return; }
+
+const SOILS = {
+  black:{name:'黒土',   color:'#3b2a1f', cap:1.0,  tol:0.08, desc:'よく光る。でも気難しい'},
+  red:  {name:'赤土',   color:'#8c4b2c', cap:0.9,  tol:0.12, desc:'ほどよく素直'},
+  sandy:{name:'砂混じり',color:'#9d8562', cap:0.72, tol:0.18, desc:'やさしい。光りにくい'}
+};
+const RESULTS = {
+  mirror:{tier:'最上', cls:'top', name:'幻の鏡面泥団子', comment:'空が映ってる。これ、本当に泥?'},
+  black: {tier:'上',   cls:'top', name:'黒光りの玉',     comment:'黒く光る。クラスで一番のやつ'},
+  pika:  {tier:'上',   cls:'',    name:'ピカピカ泥団子', comment:'先生に見せたくなる仕上がり'},
+  tsuya: {tier:'中',   cls:'',    name:'ツヤあり泥団子', comment:'ちゃんと光ってる。形はちょっといびつ'},
+  tsuru: {tier:'中',   cls:'',    name:'つるつる泥団子', comment:'形は満点。あと少し磨けば光る'},
+  normal:{tier:'中',   cls:'',    name:'ふつうの泥団子', comment:'ちゃんと泥団子。それでいい'},
+  zara:  {tier:'下',   cls:'',    name:'ざらざら泥団子', comment:'砂場の味がする'},
+  crack: {tier:'下',   cls:'',    name:'ひび割れ泥団子', comment:'水が足りなかった。日照りの田んぼみたい'},
+  mud:   {tier:'珍',   cls:'rare',name:'泥水',           comment:'団子だったもの'},
+  drill: {tier:'珍',   cls:'rare',name:'ドリル泥団子',   comment:'どうしてこうなった。回転力はある'},
+  fossil:{tier:'珍',   cls:'rare',name:'化石泥団子',     comment:'1億年前の地層から出てきた'}
+};
+const RESULT_ORDER = ['mirror','black','pika','tsuya','tsuru','normal','zara','crack','mud','drill','fossil'];
+/* 結果ごとの見た目: 色の明るさ, 粗さ, 凹凸, クリアコート, 映り込み, ゆがみ, 磨き */
+const LOOKS = {
+  mirror:[.40,.02,0,1,1.8,.004,1], black:[.48,.06,.05,.9,1.35,.01,1], pika:[.6,.13,.15,.7,1.2,.015,1],
+  tsuya:[.64,.18,.2,.6,1.1,.13,.9], tsuru:[.88,.55,.45,0,1,.012,.35], normal:[.9,.72,.8,0,1,.06,.4],
+  zara:[1.05,.95,2.2,0,1,.08,0], crack:[1.08,.95,1.6,0,1,.06,.1], mud:[.55,.1,.15,.6,1.2,.02,0],
+  drill:[.62,.25,.5,.3,1.1,0,.6], fossil:[1,1,2.6,0,.8,.1,0]
+};
+
+/* ---------- state ---------- */
+let S;
+function newState(){
+  S = {step:0, soil:'red', round:0, roundProg:0, angAcc:0, radii:[], lastAng:null, lastDir:0, reversals:0,
+       water:0.15, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
+       crack:0, stone:false, collapsed:false, result:null, lump:0.36, finalLump:0.36, mudT:0, touched:false, fullNotice:false};
+}
+newState();
+
+/* ---------- three ---------- */
+const stage = $('#stage'), gl = $('#gl'), fx = $('#fx'), fctx = fx.getContext('2d');
+const renderer = new THREE.WebGLRenderer({canvas:gl, antialias:true, alpha:true, preserveDrawingBuffer:true});
+const DPR = Math.min(2, window.devicePixelRatio || 1);
+renderer.setPixelRatio(DPR);
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(30, 1, 0.1, 60);
+
+(function env(){
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,'#4fa6e0'); g.addColorStop(.47,'#eaf6ff'); g.addColorStop(.5,'#d9bf8c'); g.addColorStop(1,'#6e4e30');
+  x.fillStyle = g; x.fillRect(0,0,1024,512);
+  x.fillStyle = '#ffffff'; x.fillRect(170,120,170,90); x.fillRect(372,130,70,70);
+  x.fillStyle = '#fff6cf'; x.beginPath(); x.arc(700,90,38,0,7); x.fill();
+  x.fillStyle = '#5f8f4e'; for(let i=0;i<14;i++){ x.beginPath(); x.arc(520+i*34,236,22+(i%3)*6,0,7); x.fill(); }
+  const t = new THREE.CanvasTexture(c);
+  t.mapping = THREE.EquirectangularReflectionMapping; t.encoding = THREE.sRGBEncoding;
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromEquirectangular(t).texture;
+})();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8a6a4a, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(-3,4,4); scene.add(key);
+
+/* textures */
+const TW = 512, TH = 256, rnd = mulberry32(42);
+const tc = document.createElement('canvas'); tc.width = TW; tc.height = TH; const tx = tc.getContext('2d');
+const SPECK = Array.from({length:5200}, () => [rnd()*TW, rnd()*TH, rnd(), 1+rnd()*2.4]);
+const DUST = Array.from({length:12}, (_,i) => Array.from({length:700}, () => [((i+rnd())*TW/12 + (rnd()-.5)*16 + TW) % TW, rnd()*TH, 1+rnd()*1.6]));
+const CRACKS = [];
+for(let k=0;k<16;k++){
+  let x0 = rnd()*TW, y0 = 40+rnd()*(TH-80), a = rnd()*Math.PI*2; const pl = [[x0,y0]];
+  const n = 5+Math.floor(rnd()*7);
+  for(let j=0;j<n;j++){ a += (rnd()-.5)*1.4; x0 += Math.cos(a)*(8+rnd()*14); y0 += Math.sin(a)*(8+rnd()*14); pl.push([x0,y0]); }
+  CRACKS.push(pl);
+}
+const colorTex = new THREE.CanvasTexture(tc); colorTex.encoding = THREE.sRGBEncoding; colorTex.anisotropy = 4;
+const bc = document.createElement('canvas'); bc.width = 512; bc.height = 256; const bx = bc.getContext('2d');
+bx.fillStyle = '#808080'; bx.fillRect(0,0,512,256);
+for(let i=0;i<14000;i++){ const v = Math.floor(rnd()*255), s = 1+rnd()*2.5; bx.fillStyle = 'rgba('+v+','+v+','+v+',.7)'; bx.fillRect(rnd()*512, rnd()*256, s, s); }
+const bumpTex = new THREE.CanvasTexture(bc);
+
+function drawTex(){
+  const sl = SOILS[S.soil];
+  tx.fillStyle = S.stone ? '#a59b8b' : sl.color; tx.fillRect(0,0,TW,TH);
+  for(const [x,y,v,s] of SPECK){
+    tx.fillStyle = v < .5 ? 'rgba(0,0,0,'+(.1+v*.22)+')' : 'rgba(255,240,215,'+((v-.5)*.22)+')';
+    tx.fillRect(x,y,s,s);
+  }
+  if(!S.stone){
+    const fade = 1 - Math.min(1, S.polish)*.85;
+    for(let i=0;i<12;i++){
+      const a = Math.min(1.6, S.sand[i]); if(a <= 0) continue;
+      tx.fillStyle = 'rgba(222,200,156,'+(Math.min(1,a/1.6)*.45*fade)+')';
+      tx.fillRect(i*TW/12-4, 0, TW/12+8, TH);
+      tx.fillStyle = 'rgba(242,226,192,'+(.75*fade)+')';
+      const L = DUST[i], n = Math.floor(a/1.6*700);
+      for(let j=0;j<n;j++) tx.fillRect(L[j][0], L[j][1], L[j][2], L[j][2]);
+    }
+  }
+  if(S.crack > 0){
+    tx.strokeStyle = 'rgba(22,13,7,'+(Math.min(1,S.crack)*.85)+')'; tx.lineWidth = 1.7; tx.lineJoin = 'round';
+    for(const pl of CRACKS){ tx.beginPath(); pl.forEach((p,j) => j ? tx.lineTo(p[0],p[1]) : tx.moveTo(p[0],p[1])); tx.stroke(); }
+  }
+  if(S.stone){
+    tx.strokeStyle = 'rgba(70,58,45,.75)'; tx.lineWidth = 3; tx.beginPath();
+    for(let a=0;a<6*Math.PI;a+=.08){ const r = 2+a*2.3; tx.lineTo(128+Math.cos(a)*r, 128+Math.sin(a)*r); }
+    tx.stroke(); tx.lineWidth = 1.5;
+    for(let a=1.5;a<6*Math.PI;a+=.5){ const r = 2+a*2.3, r2 = 2+(a-2*Math.PI)*2.3;
+      if(r2 < 2) continue; tx.beginPath(); tx.moveTo(128+Math.cos(a)*r,128+Math.sin(a)*r); tx.lineTo(128+Math.cos(a)*r2,128+Math.sin(a)*r2); tx.stroke(); }
+  }
+  colorTex.needsUpdate = true;
+}
+
+const WS = 96, HS = 72;
+const geo = new THREE.SphereGeometry(1, WS, HS);
+const base = geo.attributes.position.array.slice();
+const mat = new THREE.MeshPhysicalMaterial({map:colorTex, bumpMap:bumpTex, bumpScale:1.5, roughness:.95, metalness:.05,
+  clearcoat:0, clearcoatRoughness:.06, envMapIntensity:1});
+const ball = new THREE.Mesh(geo, mat); scene.add(ball);
+const sc = document.createElement('canvas'); sc.width = sc.height = 128; const sx = sc.getContext('2d');
+let sg = sx.createRadialGradient(64,64,4,64,64,62); sg.addColorStop(0,'rgba(40,24,10,.6)'); sg.addColorStop(1,'rgba(40,24,10,0)');
+sx.fillStyle = sg; sx.fillRect(0,0,128,128);
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(3,3), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc), transparent:true, depthWrite:false}));
+shadow.rotation.x = -Math.PI/2; shadow.position.y = -1.04; scene.add(shadow);
+
+const DIRS = Array.from({length:7}, () => ({v:new THREE.Vector3(rnd()*2-1, rnd()*2-1, rnd()*2-1).normalize(), ph:rnd()*6.28, f:2+rnd()*3}));
+function fixNormals(){
+  const n = geo.attributes.normal.array, W = WS+1;
+  for(let r=0;r<=HS;r++){ const a = r*W*3, b = (r*W+WS)*3;
+    let x = n[a]+n[b], y = n[a+1]+n[b+1], z = n[a+2]+n[b+2], l = Math.hypot(x,y,z)||1;
+    n[a]=n[b]=x/l; n[a+1]=n[b+1]=y/l; n[a+2]=n[b+2]=z/l; }
+  for(const r of [0,HS]){ let x=0,y=0,z=0; for(let c=0;c<W;c++){ const j=(r*W+c)*3; x+=n[j]; y+=n[j+1]; z+=n[j+2]; }
+    const l = Math.hypot(x,y,z)||1; for(let c=0;c<W;c++){ const j=(r*W+c)*3; n[j]=x/l; n[j+1]=y/l; n[j+2]=z/l; } }
+  geo.attributes.normal.needsUpdate = true;
+}
+function shape(mode, amt){
+  const p = geo.attributes.position.array;
+  for(let i=0;i<p.length;i+=3){
+    const x = base[i], y = base[i+1], z = base[i+2];
+    if(mode === 'drill'){
+      const t = (y+1)/2, a = Math.atan2(z,x);
+      const r = (1 - t*.88) * (1 + .2*Math.sin(a*3 + t*14));
+      const rr = Math.hypot(x,z)*r*1.12, na = a + t*Math.PI*3;
+      p[i] = Math.cos(na)*rr; p[i+2] = Math.sin(na)*rr; p[i+1] = y*1.3 + .26;
+    } else {
+      let d = 0; for(const D of DIRS) d += Math.sin(D.f*(x*D.v.x + y*D.v.y + z*D.v.z) + D.ph);
+      const k = 1 + d/DIRS.length*amt;
+      p[i] = x*k; p[i+1] = y*k; p[i+2] = z*k;
+    }
+  }
+  geo.attributes.position.needsUpdate = true; geo.computeVertexNormals(); fixNormals();
+}
+let shapeDirty = true, texDirty = true, texLast = 0;
+
+/* ---------- sizing / projection ---------- */
+function resize(){
+  const w = stage.clientWidth || 360, h = stage.clientHeight || 400;
+  renderer.setSize(w, h, false);
+  fx.width = Math.round(w*DPR); fx.height = Math.round(h*DPR);
+  cam.aspect = w/h;
+  const t = Math.tan(THREE.MathUtils.degToRad(cam.fov/2));
+  const dist = Math.max(1.6/t, 1.38/(t*cam.aspect));
+  cam.position.set(0, .85, dist); cam.lookAt(0, .1, 0); cam.updateProjectionMatrix();
+}
+const _v = new THREE.Vector3(), _r = new THREE.Vector3();
+function ballScreen(){
+  const w = stage.clientWidth, h = stage.clientHeight;
+  _v.set(0, ball.position.y, 0).project(cam);
+  const x = (_v.x+1)/2*w, y = (1-_v.y)/2*h;
+  _r.setFromMatrixColumn(cam.matrixWorld, 0).multiplyScalar(ball.scale.x).add(new THREE.Vector3(0, ball.position.y, 0)).project(cam);
+  return {x, y, r: Math.abs((_r.x+1)/2*w - x)};
+}
+window.addEventListener('resize', resize);
+if(window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+
+/* ---------- ui helpers ---------- */
+const panel = $('#panel'), hint = $('#hint'), toastEl = $('#toast');
+let toastTimer = 0;
+function toast(t, ms){ toastEl.textContent = t; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms||1100); }
+function setHint(t){ if(t){ hint.textContent = t; hint.hidden = false; hint.style.opacity = 1; } else hint.hidden = true; }
+function fadeHint(){ hint.style.opacity = 0; }
+function setSteps(){
+  [...document.querySelectorAll('#steps li')].forEach((li,i) => { li.className = i < S.step ? 'done' : i === S.step ? 'now' : ''; });
+}
+
+/* ---------- scoring ---------- */
+const sl = () => SOILS[S.soil];
+/* 採点はきびしめ: 各項目のズレに強く反応させ、合計を1.6乗で絞る */
+function waterScore(){ return clamp(100 - Math.abs(S.water-.55)/sl().tol*60, 0, 100); }
+function sandScore(){
+  const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
+  const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
+  return .5*clamp(100-Math.abs(m-1)*110,0,100) + .5*clamp(100-(sd/m)*220,0,100);
+}
+function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*300,0,100) : d <= 1.1 ? 100 : clamp(100-(d-1.1)*200,0,100); }
+function polishScore(){ return clamp(S.polish*100 - S.scratch*120, 0, 100); }
+const SOIL_MULT = {black:1, red:.93, sandy:.85};
+const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
+function computeScore(k){
+  const p = {R:S.round, W:waterScore(), Sd:sandScore(), P:patienceScore(), Q:polishScore()};
+  const raw = (p.R*.25 + p.W*.15 + p.Sd*.15 + p.P*.15 + p.Q*.30) * SOIL_MULT[S.soil];
+  S.parts = p;
+  S.score = Math.round(100*Math.pow(clamp(raw,0,100)/100, 1.6)*(FAIL_MULT[k]||1)*10)/10;
+}
+function judge(){
+  const s = sl(), R = S.round, W = waterScore(), Sd = sandScore(), P = patienceScore(), Q = polishScore(), shine = Q*s.cap;
+  if(S.collapsed || S.water > .55 + 2.5*s.tol) return 'mud';
+  if(R < 20) return 'drill';
+  if(S.dry > 1.6 || S.overRub > OVERRUB) return 'fossil';
+  if(S.water < .55 - 2.2*s.tol) return 'crack';
+  const avg = (R+W+Sd+P+Q)/5;
+  if(s.cap >= .95 && Math.min(R,W,Sd,P,Q) >= 85 && shine >= 95) return 'mirror';
+  if(shine >= 80 && R >= 70) return 'black';
+  if(avg >= 72 && shine >= 60) return 'pika';
+  if(shine >= 60 && R < 70) return 'tsuya';
+  if(Sd < 35 || shine < 25) return 'zara';
+  if(R >= 70 && shine < 55) return 'tsuru';
+  return 'normal';
+}
+
+/* ---------- look during play ---------- */
+function look(){
+  if(S.step === 6){
+    const L = LOOKS[S.result];
+    mat.color.setScalar(L[0]); mat.roughness = L[1]; mat.bumpScale = L[2]; mat.clearcoat = L[3]; mat.envMapIntensity = L[4];
+    return;
+  }
+  const s = sl(), dryK = Math.min(1, S.dry);
+  const wet = S.step >= 2 ? S.water*(1-dryK) : .3*(1-dryK);
+  const k = Math.pow(S.polish, 1.15)*s.cap;
+  let m = (1 - wet*.55) * (1 + dryK*.18) * (1 - k*.45);
+  mat.color.setScalar(m);
+  let rough = .95 - k*.91 + S.scratch*.3;
+  rough = Math.min(rough, .95 - wet*.62);
+  mat.roughness = clamp(rough, .03, 1);
+  mat.bumpScale = (1-k)*(1.6 - wet*1.1) + S.scratch*1.2;
+  mat.clearcoat = clamp((k-.4)/.6, 0, 1);
+  mat.envMapIntensity = 1 + k*.3;
+  const ex = S.step >= 2 && S.step < 6 ? Math.max(0, (S.water-.68)/.3) : 0;
+  ball.scale.set(1+ex*.16, 1-ex*.22, 1+ex*.16);
+  ball.position.y = ball.scale.y - 1;
+}
+
+/* ---------- particles ---------- */
+const parts = [];
+function spawn(o){ parts.push(Object.assign({vx:0, vy:0, g:0, life:1, decay:1.5, size:3, color:'#fff', type:'dot'}, o)); }
+function star(c, x, y, s){ c.beginPath(); c.moveTo(x,y-s); c.quadraticCurveTo(x,y,x+s,y); c.quadraticCurveTo(x,y,x,y+s); c.quadraticCurveTo(x,y,x-s,y); c.quadraticCurveTo(x,y,x,y-s); c.fill(); }
+function drawFx(dt){
+  fctx.setTransform(DPR,0,0,DPR,0,0);
+  fctx.clearRect(0,0,fx.width,fx.height);
+  const c = ballScreen();
+  if(S.step === 1){
+    fctx.lineWidth = 6; fctx.lineCap = 'round';
+    fctx.strokeStyle = 'rgba(255,250,240,.7)'; fctx.beginPath(); fctx.arc(c.x, c.y, c.r*1.22, 0, 7); fctx.stroke();
+    fctx.strokeStyle = '#f5c518'; fctx.beginPath(); fctx.arc(c.x, c.y, c.r*1.22, -Math.PI/2, -Math.PI/2 + S.roundProg*Math.PI*2); fctx.stroke();
+  }
+  for(let i=parts.length-1;i>=0;i--){
+    const p = parts[i];
+    p.vy += p.g*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.life -= p.decay*dt;
+    if(p.stopY != null && p.y >= p.stopY){
+      if(p.type === 'drop') for(let k=0;k<3;k++) spawn({x:p.x, y:p.stopY, vx:(Math.random()-.5)*120, vy:-60-Math.random()*60, g:500, size:2, color:'rgba(120,180,230,.9)', decay:3});
+      parts.splice(i,1); continue;
+    }
+    if(p.life <= 0){ parts.splice(i,1); continue; }
+    fctx.globalAlpha = Math.min(1, p.life);
+    fctx.fillStyle = p.color;
+    if(p.type === 'star') star(fctx, p.x, p.y, p.size*(.6+.4*Math.min(1,p.life)));
+    else if(p.type === 'drop'){ fctx.beginPath(); fctx.ellipse(p.x, p.y, p.size*.7, p.size, 0, 0, 7); fctx.fill(); }
+    else fctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+  fctx.globalAlpha = 1;
+}
+
+/* ---------- panels ---------- */
+function goStep(n){
+  S.step = n; setSteps(); panel.classList.remove('result'); panel.scrollTop = 0;
+  const P = PANELS[n]; panel.innerHTML = P.html(); P.bind && P.bind();
+  setHint(P.hint || ''); S.touched = false;
+}
+const PANELS = [
+  { html:() => '<p class="ask">どの土でつくる?</p><div class="soils">' +
+      Object.entries(SOILS).map(([k,s]) => '<button class="soil" id="soil-'+k+'" data-k="'+k+'"><span class="sw" style="background:'+s.color+'"></span><b>'+s.name+'</b><small>'+s.desc+'</small></button>').join('') + '</div>',
+    bind(){
+      document.querySelectorAll('.soil').forEach(b => {
+        b.addEventListener('pointerenter', () => { S.soil = b.dataset.k; texDirty = true; });
+        b.addEventListener('click', () => { S.soil = b.dataset.k; texDirty = true; toast(SOILS[S.soil].name+'に決定'); setTimeout(() => goStep(1), 500); });
+      });
+    }},
+  { hint:'団子のまわりを ぐるぐる',
+    html:() => '<p class="ask">指でぐるぐるなぞって、まんまるにしよう</p><div class="meter"><i id="m1"></i></div><p class="sub" id="s1">まだゴツゴツ</p>' },
+  { html:() => '<p class="ask">水を足して、ちょうどいい固さに</p><div class="row"><button class="btn blue" id="addW">水を足す</button><button class="btn" id="okW">これでOK</button></div><p class="sub">いまの固さ: <b id="wl"></b></p>',
+    bind(){
+      updWater();
+      $('#addW').addEventListener('click', () => {
+        S.water = Math.min(1.05, S.water + .07); updWater();
+        const c = ballScreen();
+        for(let i=0;i<12;i++) spawn({type:'drop', x:c.x+(Math.random()-.5)*c.r*.9, y:c.y-c.r*2.1-Math.random()*40, vy:120, g:900, size:4, color:'rgba(70,140,210,.9)', decay:.2, stopY:c.y-c.r*.7+Math.random()*c.r*.4});
+      });
+      $('#okW').addEventListener('click', () => goStep(3));
+    }},
+  { hint:'長押しで砂をかける',
+    html:() => '<p class="ask">砂をまぶそう。団子は回るから、まんべんなく</p><div class="bars" id="bars" aria-label="砂のつき具合">'+'<i></i>'.repeat(12)+'</div><div class="row"><button class="btn primary" id="holdS">長押しで砂</button><button class="btn" id="okS">これでOK</button></div>',
+    bind(){
+      const h = $('#holdS');
+      const on = e => { e.preventDefault(); S.holding = true; h.classList.add('pressed'); fadeHint(); };
+      const off = () => { S.holding = false; h.classList.remove('pressed'); };
+      h.addEventListener('pointerdown', on); ['pointerup','pointerleave','pointercancel'].forEach(t => h.addEventListener(t, off));
+      h.addEventListener('contextmenu', e => e.preventDefault());
+      $('#okS').addEventListener('click', () => { S.holding = false; goStep(4); });
+    }},
+  { html:() => '<p class="ask">日なたで乾かそう。さわっちゃダメ</p><div class="meter sun"><i id="m4"></i></div><p class="sub" id="s4">まだやわらかい</p><div class="row"><button class="btn" id="takeD">取り出す</button></div>',
+    bind(){ $('#takeD').addEventListener('click', () => { if(S.dry < .6) collapse(); else goStep(5); }); }},
+  { hint:'なぞって磨く',
+    html:() => '<p class="ask">団子をなぞって、ピカピカに磨こう</p><div class="meter"><i id="m5"></i></div><p class="sub">ツヤ: <b id="s5">ざらざら</b></p><div class="row"><button class="btn primary" id="done">完成!</button></div>',
+    bind(){ $('#done').addEventListener('click', finish); }},
+  { html:() => {
+      const R = RESULTS[S.result], p = S.parts;
+      const bd = [['丸さ',p.R],['水',p.W],['砂',p.Sd],['乾燥',p.P],['磨き',p.Q]]
+        .map(([l,v]) => '<div>'+l+'<b>'+Math.round(v)+'</b><i style="--w:'+Math.round(v)+'%"></i></div>').join('');
+      return '<div class="res-head"><span class="tier '+R.cls+'">'+R.tier+'</span><span class="soil-tag">'+SOILS[S.soil].name+'でつくった</span></div>' +
+        '<div class="score-line"><span class="score">'+S.score.toFixed(1)+'</span><span class="unit">点</span></div>' +
+        '<h1 class="res-name">'+R.name+'</h1><p class="res-comment">'+R.comment+'</p>' +
+        '<div class="bd" aria-label="項目別の点数">'+bd+'</div>' +
+        '<form class="reg" id="regF" novalidate><input id="nick" maxlength="10" placeholder="なまえ(10文字まで)" autocomplete="nickname" aria-label="ランキングに載せる名前"><button class="btn blue" type="submit" id="regB">登録</button></form>' +
+        '<p class="msg" id="regMsg"></p>' +
+        '<div class="row"><a class="btn" id="shareX" href="'+shareUrl()+'" target="_blank" rel="noopener">Xでシェア</a><button class="btn" id="cardB">カード</button><button class="btn" id="rankB">順位</button></div>' +
+        '<div class="row"><button class="btn primary" id="again">もう一回</button></div>';
+    },
+    bind(){
+      panel.classList.add('result');
+      $('#again').addEventListener('click', restart);
+      $('#cardB').addEventListener('click', openCard);
+      $('#rankB').addEventListener('click', openRank);
+      const nick = $('#nick'), msg = $('#regMsg');
+      nick.value = lsGet(NAME_KEY, '');
+      nick.addEventListener('input', () => { msg.textContent = ''; msg.classList.remove('err'); });
+      $('#regF').addEventListener('submit', async e => {
+        e.preventDefault();
+        const name = nick.value.trim();
+        if(!name){ msg.textContent = '名前を入れてください'; msg.classList.add('err'); return; }
+        if(S.forced){ msg.textContent = 'テスト表示の結果は登録できません'; return; }
+        if(S.registered){ msg.textContent = 'この団子はもう登録済みです'; return; }
+        S.registered = true; $('#regB').disabled = true; lsSet(NAME_KEY, name);
+        msg.textContent = '登録中…';
+        const res = await register(name.slice(0,10));
+        msg.textContent = res;
+        if(!/^(世界|自己ベスト)/.test(res)){ S.registered = false; $('#regB').disabled = false; }
+      });
+    }}
+];
+function updWater(){
+  const w = S.water, el = $('#wl'); if(!el) return;
+  el.textContent = w < .3 ? 'パサパサ' : w < .45 ? 'ちょっと乾いてる' : w <= .65 ? 'しっとり' : w <= .8 ? 'ゆるい' : 'べちゃべちゃ';
+}
+function shareUrl(){
+  const R = RESULTS[S.result];
+  const text = '泥団子をつくったら '+S.score.toFixed(1)+'点「'+R.name+'」になった('+SOILS[S.soil].name+')\n'+R.comment+'\n#ピカピカ泥団子';
+  return 'https://twitter.com/intent/tweet?text='+encodeURIComponent(text)+(GAME_URL ? '&url='+encodeURIComponent(GAME_URL) : '');
+}
+
+/* ---------- step logic ---------- */
+function finishRound(){
+  const R = S.round;
+  toast(R >= 80 ? 'まんまる!' : R >= 50 ? 'まあまあ丸い' : R >= 20 ? 'ちょっといびつ' : 'なんか、ねじれた?');
+  setTimeout(() => goStep(2), 900);
+}
+function collapse(){
+  if(S.collapsed) return;
+  S.collapsed = true; toast('あっ、崩れた…', 1400);
+  setTimeout(() => showResult('mud'), 600);
+}
+function finish(){ showResult(judge()); }
+function showResult(k, forced){
+  S.result = k; S.holding = false;
+  if(forced == null) computeScore(k);
+  else { S.score = forced; S.forced = true; S.parts = {R:80,W:75,Sd:70,P:85,Q:90}; }
+  const L = LOOKS[k];
+  S.polish = L[6]; S.crack = (k === 'crack') ? 1 : (k === 'fossil') ? .8 : 0; S.stone = (k === 'fossil');
+  if(k === 'mud') S.sand.fill(0);
+  if(k === 'zara') S.sand = S.sand.map(v => Math.max(v, 1.3));
+  ball.quaternion.identity(); ball.scale.set(1,1,1); ball.position.y = 0;
+  if(k === 'drill') shape('drill'); else shape('lump', L[5]);
+  S.mudT = 0; texDirty = true;
+  goStep(6);
+}
+function restart(){ newState(); ball.quaternion.identity(); ball.scale.set(1,1,1); ball.position.y = 0; parts.length = 0; shapeDirty = true; texDirty = true; goStep(0); }
+
+/* ---------- pointer on stage ---------- */
+const AX = new THREE.Vector3(1,0,0), AY = new THREE.Vector3(0,1,0), AZ = new THREE.Vector3(0,0,1);
+let down = false, lx = 0, ly = 0, lt = 0, vx = 0, vy = 0;
+function spin(dx, dy){ ball.rotateOnWorldAxis(AY, dx*.012); ball.rotateOnWorldAxis(AX, dy*.012); }
+function local(e){ const b = stage.getBoundingClientRect(); return {x:e.clientX-b.left, y:e.clientY-b.top}; }
+stage.addEventListener('contextmenu', e => e.preventDefault());
+stage.addEventListener('pointerdown', e => {
+  down = true; const p = local(e); lx = p.x; ly = p.y; lt = performance.now(); vx = vy = 0;
+  try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+  if(S.step === 3){ S.holding = true; fadeHint(); }
+  if(S.step === 4){ if(S.dry < .6) collapse(); else toast('もう固まってきてる'); }
+});
+stage.addEventListener('pointermove', e => {
+  if(!down) return;
+  const p = local(e), now = performance.now(), dx = p.x-lx, dy = p.y-ly, dtm = Math.max(1, now-lt);
+  lx = p.x; ly = p.y; lt = now;
+  if(S.step === 0 || S.step === 6){ if(S.result !== 'mud') spin(dx, dy); vx = dx; vy = dy; return; }
+  if(S.step === 1){
+    const c = ballScreen(), ox = p.x-c.x, oy = p.y-c.y, r = Math.hypot(ox, oy);
+    if(r < c.r*.25){ S.lastAng = null; return; }
+    if(!S.touched){ S.touched = true; fadeHint(); }
+    const a = Math.atan2(oy, ox);
+    if(S.lastAng != null){
+      let d = a - S.lastAng; if(d > Math.PI) d -= 2*Math.PI; if(d < -Math.PI) d += 2*Math.PI; d = clamp(d, -.6, .6);
+      const dir = Math.sign(d);
+      if(dir && S.lastDir && dir !== S.lastDir && Math.abs(d) > .03) S.reversals++;
+      if(dir) S.lastDir = dir;
+      S.angAcc += Math.abs(d); ball.rotateOnWorldAxis(AZ, -d);
+    }
+    S.lastAng = a; S.radii.push(r/c.r); if(S.radii.length > 600) S.radii.shift();
+    const n = S.radii.length, m = S.radii.reduce((x,y)=>x+y,0)/n, sd = Math.sqrt(S.radii.reduce((x,y)=>x+(y-m)*(y-m),0)/n);
+    const cv = m ? sd/m : 1;
+    S.round = clamp(100 - Math.max(0, cv-.03)*450 - S.reversals*4, 0, 100);
+    S.roundProg = Math.min(1, S.angAcc/(Math.PI*2*ROUND_LAPS));
+    S.finalLump = (1 - S.round/100)*.22;
+    S.lump = .36*(1-S.roundProg) + S.finalLump*S.roundProg; shapeDirty = true;
+    const m1 = $('#m1'), s1 = $('#s1');
+    if(m1) m1.style.width = Math.round(S.roundProg*100)+'%';
+    if(s1) s1.textContent = S.roundProg < .35 ? 'まだゴツゴツ' : S.roundProg < .75 ? 'だんだん丸く' : 'あと少し';
+    if(S.roundProg >= 1 && !S.roundDone){ S.roundDone = true; down = false; finishRound(); }
+    return;
+  }
+  if(S.step === 5){
+    if(!S.touched){ S.touched = true; fadeHint(); }
+    spin(dx, dy); vx = dx; vy = dy;
+    const dist = Math.hypot(dx, dy), speed = dist/dtm;
+    if(speed > 2.6 && dist > 30){ S.scratch = Math.min(.6, S.scratch + .006); if(Math.random() < .08) toast('強すぎ! キズになる', 800); }
+    if(S.polish >= 1){ S.overRub += dist; if(!S.fullNotice){ S.fullNotice = true; toast('もう十分ピカピカ', 1200); }
+      if(S.overRub > OVERRUB && !S.fossilNotice){ S.fossilNotice = true; toast('こすりすぎて、カチカチに…', 1400); } }
+    S.polish = Math.min(1, S.polish + dist*POLISH_RATE);
+    texDirty = true;
+    if(S.polish > .5 && Math.random() < .35) spawn({type:'star', x:p.x+(Math.random()-.5)*30, y:p.y+(Math.random()-.5)*30, size:5+Math.random()*5, decay:2.2, color:'#ffffff'});
+    const v = polishScore()*sl().cap, m5 = $('#m5'), s5 = $('#s5');
+    if(m5) m5.style.width = Math.round(S.polish*100)+'%';
+    if(s5) s5.textContent = v < 20 ? 'ざらざら' : v < 45 ? 'ふつう' : v < 70 ? 'ツヤあり' : v < 90 ? '黒光り' : '鏡面';
+  }
+});
+function up(){ down = false; S.lastAng = null; if(S.step === 3) S.holding = false; }
+stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+
+/* ---------- ranking ---------- */
+const RANK_KEY = 'dorodango-rank-v1', NAME_KEY = 'dorodango-name';
+function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(_){ return d; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} }
+const PID_KEY = 'dorodango-pid';
+let sharedRows = null, myId = null;
+function getPid(){
+  let p = lsGet(PID_KEY, '');
+  if(!/^[a-z0-9-]{8,40}$/i.test(p)){
+    p = (self.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    lsSet(PID_KEY, p);
+  }
+  return p;
+}
+myId = getPid().slice(0, 8);
+function localRows(){ const L = lsGet(RANK_KEY, []); return Array.isArray(L) ? L : []; }
+function renderRank(){
+  const list = $('#rankList'); if(!list) return;
+  const shared = !!sharedRows;
+  const rows = (shared ? sharedRows : localRows()).slice(0, 10);
+  $('#rankMode').textContent = shared ? '世界ランキング(1人につき自己ベスト1件)' : 'この端末のランキング(通信できませんでした)';
+  list.textContent = '';
+  rows.forEach((r, i) => {
+    const li = document.createElement('li');
+    if(shared ? r.id === myId : r.mine) li.className = 'me';
+    const no = document.createElement('span'); no.className = 'no'; no.textContent = i+1;
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = String(r.name || '名無し').slice(0,10);
+    const sc = document.createElement('span'); sc.className = 'sc'; sc.textContent = (+r.score || 0).toFixed(1);
+    const rs = document.createElement('span'); rs.className = 'rs';
+    rs.textContent = ((RESULTS[r.result] || {}).name || '') + (SOILS[r.soil] ? ' / ' + SOILS[r.soil].name : '');
+    li.append(no, nm, sc, rs); list.append(li);
+  });
+  $('#rankEmpty').hidden = rows.length > 0;
+}
+async function api(method, body){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+  try{
+    const r = await fetch('/api/rank', {method, signal: ctl.signal, headers: body ? {'content-type':'application/json'} : undefined, body: body ? JSON.stringify(body) : undefined});
+    let j = null; try{ j = await r.json(); }catch(_){}
+    return {status: r.status, data: j};
+  }finally{ clearTimeout(t); }
+}
+async function initRank(){
+  renderRank();
+  try{
+    const {status, data} = await api('GET');
+    if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; renderRank(); }
+  }catch(_){}
+}
+async function register(name){
+  const entry = {name, score:S.score, result:S.result, soil:S.soil, at:Date.now()};
+  const L = localRows(); L.push(Object.assign({mine:true}, entry)); L.sort((a,b) => b.score - a.score); lsSet(RANK_KEY, L.slice(0,10));
+  try{
+    const {status, data} = await api('POST', {pid:getPid(), name, score:S.score, result:S.result, soil:S.soil});
+    if(status === 200 && data && data.ok){
+      sharedRows = data.rows; renderRank();
+      return data.improved
+        ? '世界ランキングに登録しました(現在 ' + data.rank + ' 位)'
+        : '自己ベスト(' + (+data.best).toFixed(1) + '点・' + data.rank + '位)のほうが上なので、記録はそのままです';
+    }
+    if(status === 422) return 'その名前は使えません。別の名前で登録してください';
+    if(status === 429) return '連続で登録できません。少し待ってからもう一度どうぞ';
+  }catch(_){}
+  renderRank();
+  return '通信できなかったので、この端末にだけ記録しました';
+}
+function openRank(){ renderRank(); $('#rankM').hidden = false; }
+$('#rankOpen').addEventListener('click', openRank);
+$('#closeR').addEventListener('click', () => { $('#rankM').hidden = true; });
+$('#rankM').addEventListener('click', e => { if(e.target.id === 'rankM') $('#rankM').hidden = true; });
+
+/* ---------- card ---------- */
+async function makeCard(){
+  try{ await document.fonts.ready; }catch(_){}
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  let g = x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#bcdde9'); g.addColorStop(.6,'#e6f2f2'); g.addColorStop(.601,'#e4cc98'); g.addColorStop(1,'#c8a66a');
+  x.fillStyle = g; x.fillRect(0,0,W,H);
+  renderer.render(scene, cam);
+  const bs = ballScreen(), src = renderer.domElement, side = bs.r*2.9*DPR;
+  x.drawImage(src, bs.x*DPR-side/2, bs.y*DPR-side*.56, side, side, 140, 170, 800, 800);
+  x.fillStyle = '#2b1d13'; x.font = '44px "Mochiy Pop One", sans-serif'; x.textBaseline = 'top'; x.fillText('ピカピカ泥団子', 64, 60);
+  const R = RESULTS[S.result];
+  x.fillStyle = '#fffaf0'; x.strokeStyle = '#2b1d13'; x.lineWidth = 6;
+  x.beginPath(); x.roundRect ? x.roundRect(48, 960, W-96, 330, 36) : x.rect(48, 960, W-96, 330); x.fill(); x.stroke();
+  x.fillStyle = R.cls === 'rare' ? '#7a3fa0' : R.cls === 'top' ? '#f5c518' : '#2b1d13';
+  x.beginPath(); x.roundRect ? x.roundRect(88, 996, 120, 56, 28) : x.rect(88, 996, 120, 56); x.fill();
+  x.fillStyle = R.cls === 'top' ? '#3b2c00' : '#ffffff'; x.font = '34px "Mochiy Pop One", sans-serif'; x.textAlign = 'center'; x.fillText(R.tier, 148, 1006);
+  x.textAlign = 'left'; x.fillStyle = '#6f5a47'; x.font = '700 32px "Zen Maru Gothic", sans-serif'; x.fillText(SOILS[S.soil].name+'でつくった', 232, 1008);
+  x.textAlign = 'right'; x.fillStyle = '#2b1d13'; x.font = '84px "Mochiy Pop One", sans-serif';
+  const sw = x.measureText(S.score.toFixed(1)).width; x.fillText(S.score.toFixed(1), W-140, 978);
+  x.font = '36px "Mochiy Pop One", sans-serif'; x.fillText('点', W-90, 1020); x.textAlign = 'left';
+  void sw;
+  let fs = 76; x.font = fs+'px "Mochiy Pop One", sans-serif';
+  while(x.measureText(R.name).width > W-180 && fs > 40){ fs -= 4; x.font = fs+'px "Mochiy Pop One", sans-serif'; }
+  x.fillStyle = '#2b1d13'; x.fillText(R.name, 88, 1080);
+  x.font = '700 38px "Zen Maru Gothic", sans-serif'; x.fillText(R.comment, 88, 1186);
+  x.fillStyle = '#2b1d13'; x.font = '700 30px "Zen Maru Gothic", sans-serif'; x.textAlign = 'right'; x.fillText('#ピカピカ泥団子', W-64, 72);
+  return c.toDataURL('image/png');
+}
+async function openCard(){
+  const url = await makeCard();
+  $('#cardImg').src = url; $('#modal').hidden = false;
+}
+$('#closeM').addEventListener('click', () => { $('#modal').hidden = true; });
+$('#modal').addEventListener('click', e => { if(e.target.id === 'modal') $('#modal').hidden = true; });
+
+/* ---------- loop ---------- */
+let last = performance.now(), sparkleT = 0;
+const _q = new THREE.Quaternion(), _f = new THREE.Vector3();
+function loop(t){
+  const dt = Math.min(.05, (t-last)/1000); last = t;
+  const c = ballScreen();
+  if(S.step === 0 && !down) ball.rotateOnWorldAxis(AY, dt*.35);
+  if(S.step === 3){
+    ball.rotateOnWorldAxis(AY, dt*SAND_SPIN);
+    if(S.holding){
+      _q.copy(ball.quaternion).invert(); _f.set(0,0,1).applyQuaternion(_q);
+      let u = Math.atan2(_f.z, -_f.x)/(Math.PI*2); u = (u%1+1)%1;
+      const i = Math.floor(u*12)%12;
+      S.sand[i] = Math.min(2.4, S.sand[i] + 1.0*dt);
+      S.sand[(i+1)%12] = Math.min(2.4, S.sand[(i+1)%12] + .2*dt);
+      S.sand[(i+11)%12] = Math.min(2.4, S.sand[(i+11)%12] + .2*dt);
+      texDirty = true;
+      for(let k=0;k<5;k++) spawn({x:c.x+(Math.random()-.5)*c.r*.8, y:c.y-c.r*2-Math.random()*30, vy:80, g:700, size:2+Math.random()*2, decay:.2,
+        color:Math.random()<.5 ? '#efdcb0' : '#c9a96c', stopY:c.y-c.r*.75+Math.random()*c.r*.3});
+    }
+    const bars = document.querySelectorAll('#bars i');
+    bars.forEach((b,i) => { b.style.height = Math.max(2, Math.min(28, S.sand[i]/1.6*28))+'px'; b.classList.toggle('over', S.sand[i] > 1.6); });
+  }
+  if(S.step === 4){
+    S.dry += dt/6;
+    const lowWater = S.water < .55 - 2.2*sl().tol;
+    let cr = lowWater ? clamp((S.dry-.4)*1.5, 0, 1) : 0;
+    if(S.dry > 1.6) cr = Math.max(cr, clamp((S.dry-1.6)*1.5, 0, 1));
+    if(Math.abs(cr - S.crack) > .02){ S.crack = cr; texDirty = true; }
+    const m4 = $('#m4'), s4 = $('#s4');
+    if(m4) m4.style.width = Math.min(100, S.dry/2.2*100)+'%';
+    if(s4) s4.textContent = S.dry < .4 ? 'まだやわらかい' : S.dry < .85 ? 'かたまってきた' : S.dry < 1.25 ? 'いい感じ…かも' : S.dry < 1.6 ? 'けっこう乾いた' : 'カラカラ…';
+    if(S.dry >= 2.2){ toast('乾かしすぎた…'); goStep(5); }
+  }
+  if((S.step === 5 || S.step === 0 || S.step === 6) && !down && (Math.abs(vx) > .05 || Math.abs(vy) > .05)){ spin(vx, vy); vx *= INERTIA; vy *= INERTIA; }
+  if(S.step === 6){
+    if(S.result === 'mud'){
+      S.mudT = Math.min(1, S.mudT + dt*1.4); const e = 1 - Math.pow(1-S.mudT, 3);
+      ball.scale.set(1+e*.8, 1-e*.8, 1+e*.8); ball.position.y = ball.scale.y - 1;
+    } else if(!down && Math.abs(vx) < .3) ball.rotateOnWorldAxis(AY, dt*.4);
+    if(S.result === 'mirror' || S.result === 'black'){
+      sparkleT -= dt;
+      if(sparkleT <= 0){ sparkleT = S.result === 'mirror' ? .18 : .5;
+        const a = Math.random()*Math.PI*2, rr = Math.random()*c.r*.8;
+        spawn({type:'star', x:c.x+Math.cos(a)*rr, y:c.y+Math.sin(a)*rr, size:6+Math.random()*8, decay:1.4, color:'#ffffff'}); }
+    }
+  }
+  if(shapeDirty && S.step !== 6){ shape('lump', S.lump); shapeDirty = false; }
+  if(texDirty && t - texLast > 80){ drawTex(); texDirty = false; texLast = t; }
+  look();
+  if(S.step === 6 && S.result === 'mud'){ ball.position.y = ball.scale.y - 1; }
+  renderer.render(scene, cam);
+  drawFx(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- start ---------- */
+resize();
+drawTex();
+const m = /^#r(\d+)$/.exec(location.hash || '');
+const FORCED = [97.8, 88.4, 74.2, 58.6, 52.1, 41.3, 27.9, 19.5, 3.2, 11.7, 14.6];
+if(m && RESULT_ORDER[+m[1]]){ S.soil = 'black'; S.round = 80; showResult(RESULT_ORDER[+m[1]], FORCED[+m[1]]); }
+else goStep(0);
+initRank();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
