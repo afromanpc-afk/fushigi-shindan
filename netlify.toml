@@ -1,3 +1,7 @@
 [build]
   publish = "."
   command = "python3 fetch_assets.py"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"

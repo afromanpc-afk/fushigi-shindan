@@ -525,7 +525,9 @@ const PANELS = [
         if(S.registered){ msg.textContent = 'この団子はもう登録済みです'; return; }
         S.registered = true; $('#regB').disabled = true; lsSet(NAME_KEY, name);
         msg.textContent = '登録中…';
-        msg.textContent = await register(name.slice(0,10));
+        const res = await register(name.slice(0,10));
+        msg.textContent = res;
+        if(!/^(世界|自己ベスト)/.test(res)){ S.registered = false; $('#regB').disabled = false; }
       });
     }}
 ];
@@ -630,13 +632,23 @@ stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel',
 const RANK_KEY = 'dorodango-rank-v1', NAME_KEY = 'dorodango-name';
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(_){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} }
-let rdb = null, myId = null, sharedRows = null;
+const PID_KEY = 'dorodango-pid';
+let sharedRows = null, myId = null;
+function getPid(){
+  let p = lsGet(PID_KEY, '');
+  if(!/^[a-z0-9-]{8,40}$/i.test(p)){
+    p = (self.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    lsSet(PID_KEY, p);
+  }
+  return p;
+}
+myId = getPid().slice(0, 8);
 function localRows(){ const L = lsGet(RANK_KEY, []); return Array.isArray(L) ? L : []; }
 function renderRank(){
   const list = $('#rankList'); if(!list) return;
-  const shared = rdb && sharedRows;
+  const shared = !!sharedRows;
   const rows = (shared ? sharedRows : localRows()).slice(0, 10);
-  $('#rankMode').textContent = shared ? 'みんなのランキング(1人につき自己ベスト1件)' : 'この端末のランキング';
+  $('#rankMode').textContent = shared ? '世界ランキング(1人につき自己ベスト1件)' : 'この端末のランキング(通信できませんでした)';
   list.textContent = '';
   rows.forEach((r, i) => {
     const li = document.createElement('li');
@@ -650,35 +662,37 @@ function renderRank(){
   });
   $('#rankEmpty').hidden = rows.length > 0;
 }
+async function api(method, body){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+  try{
+    const r = await fetch('/api/rank', {method, signal: ctl.signal, headers: body ? {'content-type':'application/json'} : undefined, body: body ? JSON.stringify(body) : undefined});
+    let j = null; try{ j = await r.json(); }catch(_){}
+    return {status: r.status, data: j};
+  }finally{ clearTimeout(t); }
+}
 async function initRank(){
   renderRank();
-  if(!window.claude || typeof claude.use !== 'function') return;
   try{
-    const [d, u] = await Promise.all([claude.use('db'), claude.use('user')]);
-    myId = u ? await u.id() : null;
-    if(!d) return;
-    rdb = d;
-    rdb.collection('scores').orderBy('score', 'desc').limit(10).onSnapshot(
-      s => { sharedRows = s.docs.map(x => Object.assign({id:x.id}, x.data())); renderRank(); },
-      () => { rdb = null; sharedRows = null; renderRank(); });
-  }catch(_){ rdb = null; }
+    const {status, data} = await api('GET');
+    if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; renderRank(); }
+  }catch(_){}
 }
 async function register(name){
   const entry = {name, score:S.score, result:S.result, soil:S.soil, at:Date.now()};
   const L = localRows(); L.push(Object.assign({mine:true}, entry)); L.sort((a,b) => b.score - a.score); lsSet(RANK_KEY, L.slice(0,10));
-  if(rdb && myId){
-    try{
-      const ref = rdb.doc('scores/' + myId), cur = await ref.get();
-      const prev = cur.exists ? +cur.data().score : -1;
-      if(entry.score > prev){ await ref.set(entry); renderRank(); return 'みんなのランキングに登録しました'; }
-      renderRank(); return '自己ベスト('+prev.toFixed(1)+'点)のほうが上なので、記録はそのままです';
-    }catch(_){
-      rdb = null; sharedRows = null; renderRank();
-      return 'みんなのランキングには書き込めなかったので、この端末に記録しました';
+  try{
+    const {status, data} = await api('POST', {pid:getPid(), name, score:S.score, result:S.result, soil:S.soil});
+    if(status === 200 && data && data.ok){
+      sharedRows = data.rows; renderRank();
+      return data.improved
+        ? '世界ランキングに登録しました(現在 ' + data.rank + ' 位)'
+        : '自己ベスト(' + (+data.best).toFixed(1) + '点・' + data.rank + '位)のほうが上なので、記録はそのままです';
     }
-  }
+    if(status === 422) return 'その名前は使えません。別の名前で登録してください';
+    if(status === 429) return '連続で登録できません。少し待ってからもう一度どうぞ';
+  }catch(_){}
   renderRank();
-  return 'この端末のランキングに記録しました';
+  return '通信できなかったので、この端末にだけ記録しました';
 }
 function openRank(){ renderRank(); $('#rankM').hidden = false; }
 $('#rankOpen').addEventListener('click', openRank);
