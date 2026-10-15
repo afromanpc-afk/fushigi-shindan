@@ -16,7 +16,7 @@
 <meta name="twitter:image" content="https://amazing-dusk-b8e52b.netlify.app/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&family=Zen+Antique&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap">
 <style>
 /* Layout: a shelf of "test booklets"; each quiz keeps its own colors so the shelf previews the world inside. */
 :root{
@@ -40,9 +40,8 @@ a.q:focus-visible{outline:3px solid #ff5b2e;outline-offset:3px}
 .cover b{font-weight:400;font-size:clamp(22px,6vw,28px);line-height:1.35}
 .afro .cover{background:repeating-radial-gradient(circle at 50% 120%,#f6c945 0 22px,#f9d667 22px 44px);color:#2b1a12}
 .afro .cover b{font-family:var(--display);text-shadow:2px 2px 0 #ff5b2e}
-.akuma .cover{background:radial-gradient(ellipse at 50% 110%,rgba(201,164,92,.35),transparent 65%),#120d19;color:#ece3d3;border-bottom:2px solid var(--ink)}
-.akuma .cover b{font-family:"Zen Antique","Hiragino Mincho ProN","Yu Mincho",serif;letter-spacing:.06em;line-height:1.5}
-.akuma .cover b em{font-style:normal;color:#c9a45c}
+.doro .cover{background:linear-gradient(#bcdde9 0 64%,#e4cc98 64%);color:#2b1d13}
+.doro .cover b{font-family:var(--display);text-shadow:2px 2px 0 #fffaf0}
 .info{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px}
 .info h2{margin:0;font-size:17px;font-weight:800}
 .info p{margin:0;color:var(--soft);font-size:13.5px;font-weight:700}
@@ -59,15 +58,15 @@ footer{color:var(--soft);font-size:12px;text-align:center;font-weight:700}
     <p>10問で答えがわかる、ちょっと変わった性格診断。</p>
   </header>
   <main class="list">
-    <a class="q akuma" href="akuma/">
-      <div class="cover"><b>あなたに宿る<br><em>悪魔</em>診断</b></div>
-      <div class="info"><h2>悪魔診断</h2><p>十の問いで、あなたの魂と契約している悪魔がわかる。</p>
-        <div class="tags"><span class="new">NEW</span><span>全10問</span><span>10体の悪魔</span></div></div>
+    <a class="q doro" href="dorodango/">
+      <div class="cover"><b>ピカピカ<br>泥団子</b></div>
+      <div class="info"><h2>ピカピカ泥団子</h2><p>泥をこねて磨いて、100点満点で採点。あなたの泥団子は何点?</p>
+        <div class="tags"><span class="new">NEW</span><span>ミニゲーム</span><span>スマホ向け</span></div></div>
     </a>
     <a class="q afro" href="afro/">
       <div class="cover"><b>あなたは<br>どのタイプのアフロ?</b></div>
       <div class="info"><h2>アフロ診断</h2><p>性格は髪に出る。あなたの心の形をアフロで診断。</p>
-        <div class="tags"><span>全10問</span><span>8タイプ+隠し</span></div></div>
+        <div class="tags"><span class="new">NEW</span><span>全10問</span><span>8タイプ+隠し</span></div></div>
     </a>
   </main>
   <footer>診断はすべてエンターテインメントです。</footer>
