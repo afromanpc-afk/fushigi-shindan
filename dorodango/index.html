@@ -181,7 +181,7 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a
 if(!window.THREE){ $('#panel').innerHTML='<p class="err">3D表示を読み込めませんでした。通信状態を確認して、ページを開き直してください。</p>'; return; }
 
 const SOILS = {
-  black:{name:'黒土',   color:'#3b2a1f', cap:1.0,  tol:0.08, desc:'よく光る。でも気難しい'},
+  black:{name:'黒土',   color:'#3b2a1f', cap:1.0,  tol:0.08, desc:'よく光る。100点はこの土だけ'},
   red:  {name:'赤土',   color:'#8c4b2c', cap:0.9,  tol:0.12, desc:'ほどよく素直'},
   sandy:{name:'砂混じり',color:'#9d8562', cap:0.72, tol:0.18, desc:'やさしい。光りにくい'}
 };
@@ -211,7 +211,7 @@ const LOOKS = {
 let S;
 function newState(){
   S = {step:0, soil:'red', round:0, roundProg:0, angAcc:0, radii:[], lastAng:null, lastDir:0, reversals:0,
-       water:0.15, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
+       water:0.20, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
        crack:0, stone:false, collapsed:false, result:null, lump:0.36, finalLump:0.36, mudT:0, touched:false, fullNotice:false};
 }
 newState();
@@ -369,14 +369,15 @@ function setSteps(){
 /* ---------- scoring ---------- */
 const sl = () => SOILS[S.soil];
 /* 採点はきびしめ: 各項目のズレに強く反応させ、合計を1.6乗で絞る */
-function waterScore(){ return clamp(100 - Math.abs(S.water-.55)/sl().tol*60, 0, 100); }
+/* 各項目に「満点の幅」を持たせる(上手にやれば100点に届く) */
+function waterScore(){ const d = Math.max(0, Math.abs(S.water-.55) - .02); return clamp(100 - d/sl().tol*60, 0, 100); }
 function sandScore(){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
-  return .5*clamp(100-Math.abs(m-1)*110,0,100) + .5*clamp(100-(sd/m)*220,0,100);
+  return .5*clamp(100-Math.max(0,Math.abs(m-1)-.08)*110,0,100) + .5*clamp(100-Math.max(0,sd/m-.10)*220,0,100);
 }
 function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*300,0,100) : d <= 1.1 ? 100 : clamp(100-(d-1.1)*200,0,100); }
-function polishScore(){ return clamp(S.polish*100 - S.scratch*120, 0, 100); }
+function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.012)*120, 0, 100); }
 const SOIL_MULT = {black:1, red:.93, sandy:.85};
 const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
 function computeScore(k){
@@ -600,7 +601,7 @@ stage.addEventListener('pointermove', e => {
     S.lastAng = a; S.radii.push(r/c.r); if(S.radii.length > 600) S.radii.shift();
     const n = S.radii.length, m = S.radii.reduce((x,y)=>x+y,0)/n, sd = Math.sqrt(S.radii.reduce((x,y)=>x+(y-m)*(y-m),0)/n);
     const cv = m ? sd/m : 1;
-    S.round = clamp(100 - Math.max(0, cv-.03)*450 - S.reversals*4, 0, 100);
+    S.round = clamp(100 - Math.max(0, cv-.06)*450 - Math.max(0, S.reversals-1)*4, 0, 100);
     S.roundProg = Math.min(1, S.angAcc/(Math.PI*2*ROUND_LAPS));
     S.finalLump = (1 - S.round/100)*.22;
     S.lump = .36*(1-S.roundProg) + S.finalLump*S.roundProg; shapeDirty = true;
