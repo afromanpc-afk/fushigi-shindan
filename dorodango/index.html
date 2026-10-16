@@ -212,7 +212,7 @@ const LOOKS = {
 let S;
 function newState(){
   S = {step:0, soil:'red', round:0, roundProg:0, angAcc:0, radii:[], lastAng:null, lastDir:0, reversals:0,
-       water:0.20, waterT:[], wEma:null, wS:[], scv:null, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
+       water:0.20, waterT:[], wEma:null, wS:[], scv:null, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0, cover:new Array(36).fill(0), sweetD:0, totD:0,
        crack:0, stone:false, collapsed:false, result:null, lump:0.36, finalLump:0.36, mudT:0, touched:false, fullNotice:false};
 }
 newState();
@@ -386,13 +386,24 @@ function sandScore(){
   return .5*clamp(100-Math.max(0,Math.abs(m-1)-.05)*140,0,100) + .5*clamp(100-Math.max(0,sd/m-.07)*280,0,100);
 }
 function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*300,0,100) : d <= 1.1 ? 100 : clamp(100-(d-1.1)*200,0,100); }
-function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.008)*160, 0, 100); }
+/* 磨きのムラ: 玉を6x6のマスに分け、円の内側24マスにどれだけ均等に当たったか */
+const CELLS = []; for(let j=0;j<6;j++) for(let i=0;i<6;i++){ const cx=(i+.5)/3-1, cy=(j+.5)/3-1; if(Math.hypot(cx,cy) <= .86) CELLS.push(j*6+i); }
+function polishUcv(){
+  const v = CELLS.map(i => S.cover[i]), m = v.reduce((a,b)=>a+b,0)/v.length; if(m < 1) return null;
+  return Math.sqrt(v.reduce((a,b)=>a+(b-m)*(b-m),0)/v.length)/m;
+}
+function sweetRatio(){ return S.totD > 200 ? S.sweetD/S.totD : null; }
+function polishScore(){
+  const u = polishUcv(), sr = sweetRatio();
+  const pen = (u == null ? 0 : Math.max(0, u-.4)*45) * S.polish + (sr == null ? 0 : Math.max(0, .7-sr)*30) * S.polish;
+  return clamp(S.polish*100 - Math.max(0, S.scratch-.008)*160 - pen, 0, 100);
+}
 /* 精度ボーナス: 満点の幅の「内側」でどれだけ正確かを対数で加点。上限なし(人の手の限界まで伸びる) */
 const bp = (e,d) => Math.max(0, Math.log(d/Math.max(e, d*0.01)));
 function bonusRaw(noPolish){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
-  const r = bp(S.cv==null?1:S.cv,.04), q = bp(S.scratch,.008), w = bp(Math.abs(S.water-.55),.012),
+  const r = bp(S.cv==null?1:S.cv,.04), q = (bp(S.scratch,.008)*.5 + (polishUcv()==null?0:bp(polishUcv(),.4))*.3 + (sweetRatio()==null?0:bp(Math.max(0,1-sweetRatio()),.3))*.2), w = bp(Math.abs(S.water-.55),.012),
         sa = (bp(Math.abs(m-1),.05)+bp(sd/m,.07))/2, pt = bp(Math.abs(S.dry-1.025),.075);
   const sp = S.scv == null ? 0 : bp(S.scv,.25), tp = tempoCv() == null ? 0 : bp(tempoCv(),.15);
   return 40*(r*.24+sp*.08+(noPolish?0:q*.22)+w*.12+tp*.09+sa*.13+pt*.12);
@@ -664,10 +675,15 @@ stage.addEventListener('pointermove', e => {
     if(!S.polishStarted){ S.polishStarted = true; S.waited = performance.now() - S.t5 >= 180000; }
     spin(dx, dy); vx = dx; vy = dy;
     const dist = Math.hypot(dx, dy), speed = dist/dtm;
-    if(speed > 2.6 && dist > 30){ S.scratch = Math.min(.6, S.scratch + .006); if(Math.random() < .08) toast('強すぎ! キズになる', 800); }
+    /* 力加減: ちょうどいい速さ(0.6〜1.6px/ms)だと磨きが進み、遅すぎ・速すぎると効きが落ちる */
+    const gain = speed < .6 ? .35 + .65*speed/.6 : speed <= 1.6 ? 1 : Math.max(.5, 1 - (speed-1.6)*.5);
+    S.totD += dist; if(speed >= .6 && speed <= 1.6) S.sweetD += dist;
+    { const bc = ballScreen(), ox = (p.x-bc.x)/bc.r, oy = (p.y-bc.y)/bc.r;
+      if(Math.hypot(ox,oy) <= 1){ const ci = Math.min(5, Math.floor((ox+1)/2*6)), cj = Math.min(5, Math.floor((oy+1)/2*6)); S.cover[cj*6+ci] += dist; } }
+    if(speed > 2.2 && dist > 24){ S.scratch = Math.min(.6, S.scratch + .006); if(Math.random() < .08) toast('強すぎ! キズになる', 800); }
     if(S.polish >= 1){ S.overRub += dist; if(!S.fullNotice){ S.fullNotice = true; toast('もう十分ピカピカ', 1200); }
       if(S.overRub > OVERRUB && !S.fossilNotice){ S.fossilNotice = true; toast('こすりすぎて、カチカチに…', 1400); } }
-    S.polish = Math.min(1, S.polish + dist*POLISH_RATE);
+    S.polish = Math.min(1, S.polish + dist*gain*POLISH_RATE);
     texDirty = true;
     if(S.polish > .5 && Math.random() < .35) spawn({type:'star', x:p.x+(Math.random()-.5)*30, y:p.y+(Math.random()-.5)*30, size:5+Math.random()*5, decay:2.2, color:'#ffffff'});
     const v = polishScore()*sl().cap, m5 = $('#m5'), s5 = $('#s5');
