@@ -368,23 +368,23 @@ function setSteps(){
 
 /* ---------- scoring ---------- */
 const sl = () => SOILS[S.soil];
-/* 採点はきびしめ: 各項目のズレに強く反応させ、合計を1.6乗で絞る */
+/* 採点はきびしめ: 各項目のズレに強く反応させ、合計を2乗で絞る */
 /* 各項目に「満点の幅」を持たせる(上手にやれば100点に届く) */
-function waterScore(){ const d = Math.max(0, Math.abs(S.water-.55) - .02); return clamp(100 - d/sl().tol*60, 0, 100); }
+function waterScore(){ const d = Math.max(0, Math.abs(S.water-.55) - .012); return clamp(100 - d/sl().tol*75, 0, 100); }
 function sandScore(){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
-  return .5*clamp(100-Math.max(0,Math.abs(m-1)-.08)*110,0,100) + .5*clamp(100-Math.max(0,sd/m-.10)*220,0,100);
+  return .5*clamp(100-Math.max(0,Math.abs(m-1)-.05)*140,0,100) + .5*clamp(100-Math.max(0,sd/m-.07)*280,0,100);
 }
 function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*300,0,100) : d <= 1.1 ? 100 : clamp(100-(d-1.1)*200,0,100); }
-function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.012)*120, 0, 100); }
+function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.008)*160, 0, 100); }
 const SOIL_MULT = {black:1, red:.93, sandy:.85};
 const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
 function computeScore(k){
   const p = {R:S.round, W:waterScore(), Sd:sandScore(), P:patienceScore(), Q:polishScore()};
   const raw = (p.R*.25 + p.W*.15 + p.Sd*.15 + p.P*.15 + p.Q*.30) * SOIL_MULT[S.soil];
   S.parts = p;
-  S.score = Math.round(100*Math.pow(clamp(raw,0,100)/100, 1.6)*(FAIL_MULT[k]||1)*10)/10;
+  S.score = Math.round(100*Math.pow(clamp(raw,0,100)/100, 2.0)*(FAIL_MULT[k]||1)*10)/10;
 }
 function judge(){
   const s = sl(), R = S.round, W = waterScore(), Sd = sandScore(), P = patienceScore(), Q = polishScore(), shine = Q*s.cap;
@@ -601,7 +601,7 @@ stage.addEventListener('pointermove', e => {
     S.lastAng = a; S.radii.push(r/c.r); if(S.radii.length > 600) S.radii.shift();
     const n = S.radii.length, m = S.radii.reduce((x,y)=>x+y,0)/n, sd = Math.sqrt(S.radii.reduce((x,y)=>x+(y-m)*(y-m),0)/n);
     const cv = m ? sd/m : 1;
-    S.round = clamp(100 - Math.max(0, cv-.06)*450 - Math.max(0, S.reversals-1)*4, 0, 100);
+    S.round = clamp(100 - Math.max(0, cv-.04)*560 - Math.max(0, S.reversals-1)*4, 0, 100);
     S.roundProg = Math.min(1, S.angAcc/(Math.PI*2*ROUND_LAPS));
     S.finalLump = (1 - S.round/100)*.22;
     S.lump = .36*(1-S.roundProg) + S.finalLump*S.roundProg; shapeDirty = true;
