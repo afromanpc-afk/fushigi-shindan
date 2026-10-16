@@ -749,7 +749,7 @@ async function initRank(){
     if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; renderRank(); }
   }catch(_){}
 }
-/* 「きこまろ」を名乗る人には本物かどうかを聞く(本人確認は合言葉をサーバーで照合) */
+/* 「きこまろ」を名乗る人には本物かどうかを聞く(自己申告のみ) */
 const isKiko = n => n.normalize('NFKC').replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0)-96)).replace(/[\s・._-]/g,'').includes('きこまろ');
 function askReal(){
   return new Promise(resolve => {
@@ -763,17 +763,7 @@ function askReal(){
     const bFake = document.createElement('button'); bFake.className = 'btn'; bFake.textContent = '偽物です';
     row.append(bReal, bFake); sh.append(h, sub, row);
     bFake.onclick = () => done(null);
-    bReal.onclick = () => {
-      sh.textContent = '';
-      const h2 = document.createElement('p'); h2.className = 'ask'; h2.textContent = '合言葉を入力してください';
-      const inp = document.createElement('input'); inp.type = 'password'; inp.autocomplete = 'off'; inp.setAttribute('aria-label','合言葉'); inp.style.cssText = 'font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink)';
-      const r2 = document.createElement('div'); r2.className = 'row';
-      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = '確認';
-      const no = document.createElement('button'); no.className = 'btn'; no.textContent = 'やめる';
-      r2.append(ok, no); sh.append(h2, inp, r2); inp.focus();
-      ok.onclick = () => done(inp.value); no.onclick = () => done(null);
-      inp.addEventListener('keydown', e => { if(e.key === 'Enter') ok.click(); });
-    };
+    bReal.onclick = () => done('ok');
     document.body.append(ov);
   });
 }
@@ -789,7 +779,6 @@ async function register(name, key){
         ? '世界ランキングに登録しました(現在 ' + data.rank + ' 位)'
         : '自己ベスト(' + (+data.best).toFixed(1) + '点・' + data.rank + '位)のほうが上なので、記録はそのままです';
     }
-    if(status === 403){ lsSet(RANK_KEY, prevLocal); return '本人確認ができませんでした。別の名前で登録してください'; }
     if(status === 422) return 'その名前は使えません。別の名前で登録してください';
     if(status === 429) return '連続で登録できません。少し待ってからもう一度どうぞ';
   }catch(_){}

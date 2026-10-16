@@ -30,13 +30,6 @@ export default async (req, context) => {
   const low = full.toLowerCase();
   if (NG.some(w => low.includes(w))) return json({ error: "ng-name" }, 422);
 
-  // 「きこまろ」は本人専用: 環境変数 KIKOMARO_KEY と合言葉が一致したときだけ登録できる(未設定なら誰も使えない)
-  const kana = full.replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0) - 96)).replace(/[\s・._-]/g, "");
-  if (kana.includes("きこまろ")) {
-    const secret = process.env.KIKOMARO_KEY;
-    if (!secret || typeof b.key !== "string" || b.key !== secret) return json({ error: "verify" }, 403);
-  }
-
   const ip = context?.ip || req.headers.get("x-nf-client-connection-ip") || "";
   const now = Date.now();
   for (const k of [pid, ip]) {
