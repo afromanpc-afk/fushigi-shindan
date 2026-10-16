@@ -186,6 +186,7 @@ const SOILS = {
   sandy:{name:'砂混じり',color:'#9d8562', cap:0.72, tol:0.18, desc:'やさしい。光りにくい'}
 };
 const RESULTS = {
+  maboroshi:{tier:'幻', cls:'top', name:'幻の泥団子', comment:'ぐるぐるも、水のリズムも、ぴたり。ほんの一握りしか見たことがない'},
   mirror:{tier:'最上', cls:'top', name:'幻の鏡面泥団子', comment:'空が映ってる。これ、本当に泥?'},
   black: {tier:'上',   cls:'top', name:'黒光りの玉',     comment:'黒く光る。クラスで一番のやつ'},
   pika:  {tier:'上',   cls:'',    name:'ピカピカ泥団子', comment:'先生に見せたくなる仕上がり'},
@@ -198,10 +199,10 @@ const RESULTS = {
   drill: {tier:'珍',   cls:'rare',name:'ドリル泥団子',   comment:'どうしてこうなった。回転力はある'},
   fossil:{tier:'珍',   cls:'rare',name:'化石泥団子',     comment:'1億年前の地層から出てきた'}
 };
-const RESULT_ORDER = ['mirror','black','pika','tsuya','tsuru','normal','zara','crack','mud','drill','fossil'];
+const RESULT_ORDER = ['maboroshi','mirror','black','pika','tsuya','tsuru','normal','zara','crack','mud','drill','fossil'];
 /* 結果ごとの見た目: 色の明るさ, 粗さ, 凹凸, クリアコート, 映り込み, ゆがみ, 磨き */
 const LOOKS = {
-  mirror:[.40,.02,0,1,1.8,.004,1], black:[.48,.06,.05,.9,1.35,.01,1], pika:[.6,.13,.15,.7,1.2,.015,1],
+  maboroshi:[.8,.0,0,1,2.6,.0,1], mirror:[.40,.02,0,1,1.8,.004,1], black:[.48,.06,.05,.9,1.35,.01,1], pika:[.6,.13,.15,.7,1.2,.015,1],
   tsuya:[.64,.18,.2,.6,1.1,.13,.9], tsuru:[.88,.55,.45,0,1,.012,.35], normal:[.9,.72,.8,0,1,.06,.4],
   zara:[1.05,.95,2.2,0,1,.08,0], crack:[1.08,.95,1.6,0,1,.06,.1], mud:[.55,.1,.15,.6,1.2,.02,0],
   drill:[.62,.25,.5,.3,1.1,0,.6], fossil:[1,1,2.6,0,.8,.1,0]
@@ -211,7 +212,7 @@ const LOOKS = {
 let S;
 function newState(){
   S = {step:0, soil:'red', round:0, roundProg:0, angAcc:0, radii:[], lastAng:null, lastDir:0, reversals:0,
-       water:0.20, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
+       water:0.20, waterT:[], wEma:null, wS:[], scv:null, sand:new Array(12).fill(0), holding:false, dry:0, polish:0, scratch:0, overRub:0,
        crack:0, stone:false, collapsed:false, result:null, lump:0.36, finalLump:0.36, mudT:0, touched:false, fullNotice:false};
 }
 newState();
@@ -370,7 +371,15 @@ function setSteps(){
 const sl = () => SOILS[S.soil];
 /* 採点はきびしめ: 各項目のズレに強く反応させ、合計を2乗で絞る */
 /* 各項目に「満点の幅」を持たせる(100点=上手。そこから先は精度ボーナスで上限なしに伸びる) */
-function waterScore(){ const d = Math.max(0, Math.abs(S.water-.55) - .012); return clamp(100 - d/sl().tol*75, 0, 100); }
+function tempoCv(){
+  const t = S.waterT; if(t.length < 3) return null;
+  const iv = t.slice(1).map((v,i) => v - t[i]), m = iv.reduce((a,b)=>a+b,0)/iv.length;
+  return Math.sqrt(iv.reduce((a,b)=>a+(b-m)*(b-m),0)/iv.length)/m;
+}
+function waterScore(){
+  const d = Math.max(0, Math.abs(S.water-.55) - .012), tc = tempoCv();
+  return clamp(100 - d/sl().tol*75, 0, 100) * (tc == null ? 1 : 1 - clamp((tc-.15)*.5, 0, .3));
+}
 function sandScore(){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
@@ -385,7 +394,8 @@ function bonusRaw(){
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
   const r = bp(S.cv==null?1:S.cv,.04), q = bp(S.scratch,.008), w = bp(Math.abs(S.water-.55),.012),
         sa = (bp(Math.abs(m-1),.05)+bp(sd/m,.07))/2, pt = bp(Math.abs(S.dry-1.025),.075);
-  return 40*(r*.30+q*.25+w*.15+sa*.15+pt*.15);
+  const sp = S.scv == null ? 0 : bp(S.scv,.25), tp = tempoCv() == null ? 0 : bp(tempoCv(),.15);
+  return 40*(r*.24+sp*.08+q*.22+w*.12+tp*.09+sa*.13+pt*.12);
 }
 const SOIL_MULT = {black:1, red:.93, sandy:.85};
 const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
@@ -403,6 +413,8 @@ function judge(){
   if(R < 20) return 'drill';
   if(S.dry > 1.6 || S.overRub > OVERRUB) return 'fossil';
   if(S.water < .55 - 2.2*s.tol) return 'crack';
+  const tc = tempoCv();
+  if(R >= 80 && Q >= 60 && S.scv != null && S.scv < .16 && tc != null && tc < .10 && S.waterT.length >= 5) return 'maboroshi';
   const avg = (R+W+Sd+P+Q)/5;
   if(s.cap >= .95 && Math.min(R,W,Sd,P,Q) >= 85 && shine >= 95) return 'mirror';
   if(shine >= 80 && R >= 70) return 'black';
@@ -417,7 +429,8 @@ function judge(){
 function look(){
   if(S.step === 6){
     const L = LOOKS[S.result];
-    mat.color.setScalar(L[0]); mat.roughness = L[1]; mat.bumpScale = L[2]; mat.clearcoat = L[3]; mat.envMapIntensity = L[4];
+    if(S.result === 'maboroshi'){ mat.color.setRGB(.72,.88,1.15); mat.emissive.setRGB(.04,.10,.18); } else { mat.color.setScalar(L[0]); mat.emissive.setRGB(0,0,0); }
+    mat.roughness = L[1]; mat.bumpScale = L[2]; mat.clearcoat = L[3]; mat.envMapIntensity = L[4];
     return;
   }
   const s = sl(), dryK = Math.min(1, S.dry);
@@ -487,7 +500,7 @@ const PANELS = [
     bind(){
       updWater();
       $('#addW').addEventListener('click', () => {
-        S.water = Math.min(1.05, S.water + .07); updWater();
+        S.water = Math.min(1.05, S.water + .07); S.waterT.push(performance.now()); updWater();
         const c = ballScreen();
         for(let i=0;i<12;i++) spawn({type:'drop', x:c.x+(Math.random()-.5)*c.r*.9, y:c.y-c.r*2.1-Math.random()*40, vy:120, g:900, size:4, color:'rgba(70,140,210,.9)', decay:.2, stopY:c.y-c.r*.7+Math.random()*c.r*.4});
       });
@@ -608,11 +621,17 @@ stage.addEventListener('pointermove', e => {
       if(dir && S.lastDir && dir !== S.lastDir && Math.abs(d) > .03) S.reversals++;
       if(dir) S.lastDir = dir;
       S.angAcc += Math.abs(d); ball.rotateOnWorldAxis(AZ, -d);
+      if(Math.abs(d) > .004 && dtm < 80){
+        const w = Math.abs(d)/dtm; S.wEma = S.wEma == null ? w : S.wEma*.88 + w*.12;
+        S.wS.push(S.wEma); if(S.wS.length > 600) S.wS.shift();
+        if(S.wS.length > 55){ const q = S.wS.slice(15), qm = q.reduce((a,b)=>a+b,0)/q.length;
+          S.scv = Math.sqrt(q.reduce((a,b)=>a+(b-qm)*(b-qm),0)/q.length)/qm; }
+      }
     }
     S.lastAng = a; S.radii.push(r/c.r); if(S.radii.length > 600) S.radii.shift();
     const n = S.radii.length, m = S.radii.reduce((x,y)=>x+y,0)/n, sd = Math.sqrt(S.radii.reduce((x,y)=>x+(y-m)*(y-m),0)/n);
     const cv = m ? sd/m : 1; S.cv = cv;
-    S.round = clamp(100 - Math.max(0, cv-.04)*560 - Math.max(0, S.reversals-1)*4, 0, 100);
+    S.round = clamp(100 - Math.max(0, cv-.04)*560 - Math.max(0, S.reversals-1)*4 - Math.max(0, (S.scv == null ? 0 : S.scv) - .25)*70, 0, 100);
     S.roundProg = Math.min(1, S.angAcc/(Math.PI*2*ROUND_LAPS));
     S.finalLump = (1 - S.round/100)*.22;
     S.lump = .36*(1-S.roundProg) + S.finalLump*S.roundProg; shapeDirty = true;
@@ -786,9 +805,9 @@ function loop(t){
       S.mudT = Math.min(1, S.mudT + dt*1.4); const e = 1 - Math.pow(1-S.mudT, 3);
       ball.scale.set(1+e*.8, 1-e*.8, 1+e*.8); ball.position.y = ball.scale.y - 1;
     } else if(!down && Math.abs(vx) < .3) ball.rotateOnWorldAxis(AY, dt*.4);
-    if(S.result === 'mirror' || S.result === 'black'){
+    if(S.result === 'mirror' || S.result === 'black' || S.result === 'maboroshi'){
       sparkleT -= dt;
-      if(sparkleT <= 0){ sparkleT = S.result === 'mirror' ? .18 : .5;
+      if(sparkleT <= 0){ sparkleT = (S.result === 'mirror' || S.result === 'maboroshi') ? .18 : .5;
         const a = Math.random()*Math.PI*2, rr = Math.random()*c.r*.8;
         spawn({type:'star', x:c.x+Math.cos(a)*rr, y:c.y+Math.sin(a)*rr, size:6+Math.random()*8, decay:1.4, color:'#ffffff'}); }
     }
@@ -806,7 +825,7 @@ function loop(t){
 resize();
 drawTex();
 const m = /^#r(\d+)$/.exec(location.hash || '');
-const FORCED = [97.8, 88.4, 74.2, 58.6, 52.1, 41.3, 27.9, 19.5, 3.2, 11.7, 14.6];
+const FORCED = [188.0, 97.8, 88.4, 74.2, 58.6, 52.1, 41.3, 27.9, 19.5, 3.2, 11.7, 14.6];
 if(m && RESULT_ORDER[+m[1]]){ S.soil = 'black'; S.round = 80; showResult(RESULT_ORDER[+m[1]], FORCED[+m[1]]); }
 else goStep(0);
 initRank();

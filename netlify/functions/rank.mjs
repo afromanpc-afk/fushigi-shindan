@@ -1,7 +1,7 @@
 // 泥団子ランキングAPI: GET /api/rank → TOP10 / POST /api/rank → 登録(1人1件・自己ベストのみ)
 import { getStore } from "@netlify/blobs";
 
-const RESULTS = ["mirror","black","pika","tsuya","tsuru","normal","zara","crack","mud","drill","fossil"];
+const RESULTS = ["maboroshi","mirror","black","pika","tsuya","tsuru","normal","zara","crack","mud","drill","fossil"];
 const SOILS = ["black","red","sandy"];
 const KEEP = 100, TOP = 10, COOLDOWN_MS = 8000;
 const NG = ["死ね","殺す","ころす","しね","ちんこ","まんこ","うんこ","fuck","shit","nigger","http","www."];
