@@ -186,7 +186,7 @@ const SOILS = {
   sandy:{name:'砂混じり',color:'#9d8562', cap:0.72, tol:0.18, desc:'やさしい。光りにくい'}
 };
 const RESULTS = {
-  maboroshi:{tier:'幻', cls:'top', name:'幻の泥団子', comment:'ぐるぐるも、水のリズムも、ぴたり。ほんの一握りしか見たことがない'},
+  maboroshi:{tier:'幻', cls:'top', name:'幻の泥団子', comment:'待った時間が、そのまま光になった。ほんの一握りしか見たことがない'},
   mirror:{tier:'最上', cls:'top', name:'幻の鏡面泥団子', comment:'空が映ってる。これ、本当に泥?'},
   black: {tier:'上',   cls:'top', name:'黒光りの玉',     comment:'黒く光る。クラスで一番のやつ'},
   pika:  {tier:'上',   cls:'',    name:'ピカピカ泥団子', comment:'先生に見せたくなる仕上がり'},
@@ -389,16 +389,35 @@ function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*30
 function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.008)*160, 0, 100); }
 /* 精度ボーナス: 満点の幅の「内側」でどれだけ正確かを対数で加点。上限なし(人の手の限界まで伸びる) */
 const bp = (e,d) => Math.max(0, Math.log(d/Math.max(e, d*0.01)));
-function bonusRaw(){
+function bonusRaw(noPolish){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
   const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
   const r = bp(S.cv==null?1:S.cv,.04), q = bp(S.scratch,.008), w = bp(Math.abs(S.water-.55),.012),
         sa = (bp(Math.abs(m-1),.05)+bp(sd/m,.07))/2, pt = bp(Math.abs(S.dry-1.025),.075);
   const sp = S.scv == null ? 0 : bp(S.scv,.25), tp = tempoCv() == null ? 0 : bp(tempoCv(),.15);
-  return 40*(r*.24+sp*.08+q*.22+w*.12+tp*.09+sa*.13+pt*.12);
+  return 40*(r*.24+sp*.08+(noPolish?0:q*.22)+w*.12+tp*.09+sa*.13+pt*.12);
 }
 const SOIL_MULT = {black:1, red:.93, sandy:.85};
 const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
+/* 磨き以外の点数(幻の泥団子の条件に使う) */
+function nonPolishScore(){
+  const raw = (S.round*.25 + waterScore()*.15 + sandScore()*.15 + patienceScore()*.15)/.70*SOIL_MULT[S.soil], f = clamp(raw,0,100)/100;
+  return 100*Math.pow(f,2) + bonusRaw(true)*Math.pow(f,8);
+}
+/* 磨く前の放置時間で、朝→夕方→夜と背景が変わる */
+const SKY = [
+  {t:0,  c:['#bcdde9','#e6f2f2','#e4cc98','#c8a66a']},
+  {t:.5, c:['#6e5a9c','#f4a468','#c9945a','#8f5f36']},
+  {t:1,  c:['#070d26','#1b2a58','#3a3a4c','#25232f']}
+];
+const hx = h => [1,3,5].map(i => parseInt(h.substr(i,2),16));
+let skyT = -1;
+function setSky(t){
+  t = clamp(t,0,1); if(Math.abs(t - skyT) < .003) return; skyT = t;
+  const i = t < .5 ? 0 : 1, a = SKY[i], b = SKY[i+1], k = (t - a.t)/(b.t - a.t);
+  const col = a.c.map((c0,j) => { const x = hx(c0), y = hx(b.c[j]); return 'rgb('+x.map((v,n) => Math.round(v+(y[n]-v)*k)).join(',')+')'; });
+  stage.style.background = 'linear-gradient(180deg,'+col[0]+' 0%,'+col[1]+' 67%,'+col[2]+' 67.4%,'+col[3]+' 100%)';
+}
 function computeScore(k){
   const p = {R:S.round, W:waterScore(), Sd:sandScore(), P:patienceScore(), Q:polishScore()};
   const raw = (p.R*.25 + p.W*.15 + p.Sd*.15 + p.P*.15 + p.Q*.30) * SOIL_MULT[S.soil];
@@ -413,8 +432,7 @@ function judge(){
   if(R < 20) return 'drill';
   if(S.dry > 1.6 || S.overRub > OVERRUB) return 'fossil';
   if(S.water < .55 - 2.2*s.tol) return 'crack';
-  const tc = tempoCv();
-  if(R >= 80 && Q >= 60 && S.scv != null && S.scv < .16 && tc != null && tc < .10 && S.waterT.length >= 5) return 'maboroshi';
+  if(S.waited && Q >= 60 && nonPolishScore() >= 100) return 'maboroshi';
   const avg = (R+W+Sd+P+Q)/5;
   if(s.cap >= .95 && Math.min(R,W,Sd,P,Q) >= 85 && shine >= 95) return 'mirror';
   if(shine >= 80 && R >= 70) return 'black';
@@ -481,7 +499,7 @@ function drawFx(dt){
 
 /* ---------- panels ---------- */
 function goStep(n){
-  S.step = n; setSteps(); panel.classList.remove('result'); panel.scrollTop = 0;
+  S.step = n; if(n === 5) S.t5 = performance.now(); if(n < 5) setSky(0); setSteps(); panel.classList.remove('result'); panel.scrollTop = 0;
   const P = PANELS[n]; panel.innerHTML = P.html(); P.bind && P.bind();
   setHint(P.hint || ''); S.touched = false;
 }
@@ -579,7 +597,7 @@ function collapse(){
 }
 function finish(){ showResult(judge()); }
 function showResult(k, forced){
-  S.result = k; S.holding = false;
+  S.result = k; S.holding = false; if(k === 'maboroshi') setSky(1);
   if(forced == null) computeScore(k);
   else { S.score = forced; S.forced = true; S.parts = {R:80,W:75,Sd:70,P:85,Q:90}; }
   const L = LOOKS[k];
@@ -643,6 +661,7 @@ stage.addEventListener('pointermove', e => {
   }
   if(S.step === 5){
     if(!S.touched){ S.touched = true; fadeHint(); }
+    if(!S.polishStarted){ S.polishStarted = true; S.waited = performance.now() - S.t5 >= 180000; }
     spin(dx, dy); vx = dx; vy = dy;
     const dist = Math.hypot(dx, dy), speed = dist/dtm;
     if(speed > 2.6 && dist > 30){ S.scratch = Math.min(.6, S.scratch + .006); if(Math.random() < .08) toast('強すぎ! キズになる', 800); }
@@ -788,6 +807,7 @@ function loop(t){
     const bars = document.querySelectorAll('#bars i');
     bars.forEach((b,i) => { b.style.height = Math.max(2, Math.min(28, S.sand[i]/1.6*28))+'px'; b.classList.toggle('over', S.sand[i] > 1.6); });
   }
+  if(S.step === 5 && !S.polishStarted && S.t5) setSky((performance.now() - S.t5)/180000);
   if(S.step === 4){
     S.dry += dt/6;
     const lowWater = S.water < .55 - 2.2*sl().tol;
