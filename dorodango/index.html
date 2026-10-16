@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ピカピカ泥団子</title>
-<meta name="description" content="泥をこねて、水と砂を足して、ピカピカになるまで磨く。100点満点で採点される泥団子づくりゲーム。">
+<meta name="description" content="泥をこねて、水と砂を足して、ピカピカになるまで磨く。点数に上限のない泥団子づくりゲーム。">
 <meta name="theme-color" content="#bcdde9">
 <meta property="og:title" content="ピカピカ泥団子">
-<meta property="og:description" content="泥をこねて磨いて、100点満点で採点。あなたの泥団子は何点?">
+<meta property="og:description" content="泥をこねて磨いて、点数は上限なし。あなたの泥団子は何点?">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://amazing-dusk-b8e52b.netlify.app/dorodango/">
 <meta property="og:image" content="https://amazing-dusk-b8e52b.netlify.app/dorodango/og.png">
@@ -369,7 +369,7 @@ function setSteps(){
 /* ---------- scoring ---------- */
 const sl = () => SOILS[S.soil];
 /* 採点はきびしめ: 各項目のズレに強く反応させ、合計を2乗で絞る */
-/* 各項目に「満点の幅」を持たせる(上手にやれば100点に届く) */
+/* 各項目に「満点の幅」を持たせる(100点=上手。そこから先は精度ボーナスで上限なしに伸びる) */
 function waterScore(){ const d = Math.max(0, Math.abs(S.water-.55) - .012); return clamp(100 - d/sl().tol*75, 0, 100); }
 function sandScore(){
   const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
@@ -378,13 +378,24 @@ function sandScore(){
 }
 function patienceScore(){ const d = S.dry; return d < .95 ? clamp(100-(.95-d)*300,0,100) : d <= 1.1 ? 100 : clamp(100-(d-1.1)*200,0,100); }
 function polishScore(){ return clamp(S.polish*100 - Math.max(0, S.scratch-.008)*160, 0, 100); }
+/* 精度ボーナス: 満点の幅の「内側」でどれだけ正確かを対数で加点。上限なし(人の手の限界まで伸びる) */
+const bp = (e,d) => Math.max(0, Math.log(d/Math.max(e, d*0.01)));
+function bonusRaw(){
+  const m = S.sand.reduce((a,b)=>a+b,0)/12; if(m <= 0) return 0;
+  const sd = Math.sqrt(S.sand.reduce((a,b)=>a+(b-m)*(b-m),0)/12);
+  const r = bp(S.cv==null?1:S.cv,.04), q = bp(S.scratch,.008), w = bp(Math.abs(S.water-.55),.012),
+        sa = (bp(Math.abs(m-1),.05)+bp(sd/m,.07))/2, pt = bp(Math.abs(S.dry-1.025),.075);
+  return 40*(r*.30+q*.25+w*.15+sa*.15+pt*.15);
+}
 const SOIL_MULT = {black:1, red:.93, sandy:.85};
 const FAIL_MULT = {mud:.1, drill:.25, fossil:.3, crack:.45};
 function computeScore(k){
   const p = {R:S.round, W:waterScore(), Sd:sandScore(), P:patienceScore(), Q:polishScore()};
   const raw = (p.R*.25 + p.W*.15 + p.Sd*.15 + p.P*.15 + p.Q*.30) * SOIL_MULT[S.soil];
   S.parts = p;
-  S.score = Math.round(100*Math.pow(clamp(raw,0,100)/100, 2.0)*(FAIL_MULT[k]||1)*10)/10;
+  const base = 100*Math.pow(clamp(raw,0,100)/100, 2.0)*(FAIL_MULT[k]||1);
+  S.bonus = FAIL_MULT[k] ? 0 : bonusRaw()*Math.pow(clamp(raw,0,100)/100, 8);
+  S.score = Math.round((base + S.bonus)*10)/10;
 }
 function judge(){
   const s = sl(), R = S.round, W = waterScore(), Sd = sandScore(), P = patienceScore(), Q = polishScore(), shine = Q*s.cap;
@@ -503,7 +514,7 @@ const PANELS = [
         .map(([l,v]) => '<div>'+l+'<b>'+Math.round(v)+'</b><i style="--w:'+Math.round(v)+'%"></i></div>').join('');
       return '<div class="res-head"><span class="tier '+R.cls+'">'+R.tier+'</span><span class="soil-tag">'+SOILS[S.soil].name+'でつくった</span></div>' +
         '<div class="score-line"><span class="score">'+S.score.toFixed(1)+'</span><span class="unit">点</span></div>' +
-        '<h1 class="res-name">'+R.name+'</h1><p class="res-comment">'+R.comment+'</p>' +
+        (S.bonus>=0.5?'<p class="sub" style="text-align:center;margin:-4px 0 6px">うち精度ボーナス +'+S.bonus.toFixed(1)+'</p>':'')+'<h1 class="res-name">'+R.name+'</h1><p class="res-comment">'+R.comment+'</p>' +
         '<div class="bd" aria-label="項目別の点数">'+bd+'</div>' +
         '<form class="reg" id="regF" novalidate><input id="nick" maxlength="10" placeholder="なまえ(10文字まで)" autocomplete="nickname" aria-label="ランキングに載せる名前"><button class="btn blue" type="submit" id="regB">登録</button></form>' +
         '<p class="msg" id="regMsg"></p>' +
@@ -600,7 +611,7 @@ stage.addEventListener('pointermove', e => {
     }
     S.lastAng = a; S.radii.push(r/c.r); if(S.radii.length > 600) S.radii.shift();
     const n = S.radii.length, m = S.radii.reduce((x,y)=>x+y,0)/n, sd = Math.sqrt(S.radii.reduce((x,y)=>x+(y-m)*(y-m),0)/n);
-    const cv = m ? sd/m : 1;
+    const cv = m ? sd/m : 1; S.cv = cv;
     S.round = clamp(100 - Math.max(0, cv-.04)*560 - Math.max(0, S.reversals-1)*4, 0, 100);
     S.roundProg = Math.min(1, S.angAcc/(Math.PI*2*ROUND_LAPS));
     S.finalLump = (1 - S.round/100)*.22;

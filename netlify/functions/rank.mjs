@@ -25,7 +25,7 @@ export default async (req, context) => {
   const full = typeof b.name === "string" ? b.name.normalize("NFKC").replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, "").trim() : "";
   const name = full.slice(0, 10);
   if (!pid || !name) return json({ error: "name" }, 400);
-  if (!Number.isFinite(score) || score < 0 || score > 100) return json({ error: "score" }, 400);
+  if (!Number.isFinite(score) || score < 0 || score > 1000) return json({ error: "score" }, 400);
   if (!RESULTS.includes(b.result) || !SOILS.includes(b.soil)) return json({ error: "result" }, 400);
   const low = full.toLowerCase();
   if (NG.some(w => low.includes(w))) return json({ error: "ng-name" }, 422);
