@@ -3,6 +3,9 @@ import { getStore } from "@netlify/blobs";
 
 const RESULTS = ["maboroshi","mirror","black","pika","tsuya","tsuru","normal","zara","crack","mud","drill","fossil"];
 const SOILS = ["black","red","sandy"];
+// 幻の泥団子をつくった人の殿堂(ランキングとは別枠)。先頭は固定の殿堂入り
+const SEED_LEGENDS = ["アフロ斎藤"];
+const LEGEND_KEEP = 50;
 const KEEP = 100, TOP = 10, COOLDOWN_MS = 8000;
 const NG = ["死ね","殺す","ころす","しね","ちんこ","まんこ","うんこ","fuck","shit","nigger","http","www."];
 const recent = new Map(); // 同じ端末・IPからの連投を抑える(ベストエフォート)
@@ -16,7 +19,10 @@ export default async (req, context) => {
   const store = getStore({ name: "dorodango", consistency: "strong" });
   let rows = (await store.get("rows", { type: "json" })) || [];
 
-  if (req.method === "GET") return json({ rows: pub(rows) });
+  let legends = (await store.get("legends", { type: "json" })) || [];
+  const legendNames = () => [...SEED_LEGENDS, ...legends.map(l => l.name).filter(n => !SEED_LEGENDS.includes(n))];
+
+  if (req.method === "GET") return json({ rows: pub(rows), legends: legendNames() });
   if (req.method !== "POST") return json({ error: "method" }, 405);
 
   let b; try { b = await req.json(); } catch { return json({ error: "bad json" }, 400); }
@@ -39,6 +45,12 @@ export default async (req, context) => {
   }
   if (recent.size > 5000) recent.clear();
 
+  if (b.result === "maboroshi" && !legends.some(l => l.id === pid)) {
+    legends.push({ id: pid, name, at: now });
+    legends = legends.slice(-LEGEND_KEEP);
+    await store.setJSON("legends", legends);
+  }
+
   const sc = Math.round(score * 10) / 10;
   const i = rows.findIndex(r => r.id === pid);
   let updated = false;
@@ -52,7 +64,7 @@ export default async (req, context) => {
   }
   const rank = rows.findIndex(r => r.id === pid) + 1;
   const best = (rows.find(r => r.id === pid) || { score: sc }).score;
-  return json({ ok: true, rank: rank || null, best, improved: updated && best === sc, rows: pub(rows) });
+  return json({ ok: true, rank: rank || null, best, improved: updated && best === sc, rows: pub(rows), legends: legendNames() });
 };
 
 export const config = { path: "/api/rank" };

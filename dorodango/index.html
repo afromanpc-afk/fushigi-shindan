@@ -115,7 +115,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
 .rank-mode{margin:0;font-size:12px;font-weight:700;color:var(--ink-soft)}
 .rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;overflow-y:auto;min-height:0}
 .rank li{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 4px;border-bottom:1px dashed rgba(43,29,19,.2)}
-.rank li.me{background:rgba(245,197,24,.28);border-radius:8px}
+.legend{border-top:2px solid var(--ink);padding-top:8px}.legend h3{margin:0 0 4px;font-family:var(--f-display);font-size:13px}.legend p{margin:0;font-size:13px;font-weight:700;line-height:1.7;overflow-wrap:anywhere}.rank li.me{background:rgba(245,197,24,.28);border-radius:8px}
 .rank .no{font-family:var(--f-display);font-size:18px;text-align:center;font-variant-numeric:tabular-nums}
 .rank li:nth-child(1) .no{color:#b8860b}
 .rank .nm{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -154,6 +154,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:12px;pa
     <p class="rank-mode" id="rankMode"></p>
     <ol class="rank" id="rankList"></ol>
     <p class="rank-mode" id="rankEmpty" hidden>まだ記録がありません。最初の1位になろう</p>
+    <div class="legend" id="legendBox" hidden><h3>幻の泥団子をつくった人</h3><p id="legendList"></p></div>
     <button class="btn" id="closeR">閉じる</button>
   </div>
 </div>
@@ -678,7 +679,7 @@ stage.addEventListener('pointermove', e => {
   }
   if(S.step === 5){
     if(!S.touched){ S.touched = true; fadeHint(); }
-    if(!S.polishStarted){ S.polishStarted = true; S.waited = performance.now() - S.t5 >= 180000; }
+    if(!S.polishStarted){ S.polishStarted = true; { const wt = performance.now() - S.t5; S.waited = wt >= 150000 && wt <= 210000; } }
     spin(dx, dy); vx = dx; vy = dy;
     const dist = Math.hypot(dx, dy), speed = dist/dtm;
     /* 力加減: ちょうどいい速さ(0.6〜1.6px/ms)だと磨きが進み、遅すぎ・速すぎると効きが落ちる */
@@ -705,7 +706,7 @@ const RANK_KEY = 'dorodango-rank-v1', NAME_KEY = 'dorodango-name';
 function lsGet(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(_){ return d; } }
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(_){} }
 const PID_KEY = 'dorodango-pid';
-let sharedRows = null, myId = null;
+let sharedRows = null, myId = null, legends = null;
 function getPid(){
   let p = lsGet(PID_KEY, '');
   if(!/^[a-z0-9-]{8,40}$/i.test(p)){
@@ -733,6 +734,8 @@ function renderRank(){
     li.append(no, nm, sc, rs); list.append(li);
   });
   $('#rankEmpty').hidden = rows.length > 0;
+  const lb = $('#legendBox'), ll = $('#legendList');
+  if(lb && ll){ lb.hidden = !(legends && legends.length); ll.textContent = (legends || []).slice(0, 30).map(n => '✦ ' + String(n).slice(0,10)).join('   '); }
 }
 async function api(method, body){
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
@@ -746,7 +749,7 @@ async function initRank(){
   renderRank();
   try{
     const {status, data} = await api('GET');
-    if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; renderRank(); }
+    if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; if(Array.isArray(data.legends)) legends = data.legends; renderRank(); }
   }catch(_){}
 }
 /* 「きこまろ」を名乗る人には本物かどうかを聞く(自己申告のみ) */
@@ -774,7 +777,7 @@ async function register(name, key){
   try{
     const {status, data} = await api('POST', {pid:getPid(), name, score:S.score, result:S.result, soil:S.soil, key});
     if(status === 200 && data && data.ok){
-      sharedRows = data.rows; renderRank();
+      sharedRows = data.rows; if(Array.isArray(data.legends)) legends = data.legends; renderRank();
       return data.improved
         ? '世界ランキングに登録しました(現在 ' + data.rank + ' 位)'
         : '自己ベスト(' + (+data.best).toFixed(1) + '点・' + data.rank + '位)のほうが上なので、記録はそのままです';
