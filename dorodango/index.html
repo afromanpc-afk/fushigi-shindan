@@ -577,9 +577,15 @@ const PANELS = [
         if(!name){ msg.textContent = '名前を入れてください'; msg.classList.add('err'); return; }
         if(S.forced){ msg.textContent = 'テスト表示の結果は登録できません'; return; }
         if(S.registered){ msg.textContent = 'この団子はもう登録済みです'; return; }
+        let key = '';
+        if(isKiko(name)){
+          const a = await askReal();
+          if(a == null){ msg.textContent = '「きこまろ」は本人だけの名前です。別の名前で登録してください'; msg.classList.add('err'); return; }
+          key = a;
+        }
         S.registered = true; $('#regB').disabled = true; lsSet(NAME_KEY, name);
         msg.textContent = '登録中…';
-        const res = await register(name.slice(0,10));
+        const res = await register(name.slice(0,10), key);
         msg.textContent = res;
         if(!/^(世界|自己ベスト)/.test(res)){ S.registered = false; $('#regB').disabled = false; }
       });
@@ -743,17 +749,47 @@ async function initRank(){
     if(status === 200 && data && Array.isArray(data.rows)){ sharedRows = data.rows; renderRank(); }
   }catch(_){}
 }
-async function register(name){
+/* 「きこまろ」を名乗る人には本物かどうかを聞く(本人確認は合言葉をサーバーで照合) */
+const isKiko = n => n.normalize('NFKC').replace(/[\u30a1-\u30f6]/g, c => String.fromCharCode(c.charCodeAt(0)-96)).replace(/[\s・._-]/g,'').includes('きこまろ');
+function askReal(){
+  return new Promise(resolve => {
+    const ov = document.createElement('div'); ov.className = 'modal';
+    const sh = document.createElement('div'); sh.className = 'sheet'; ov.append(sh);
+    const done = v => { ov.remove(); resolve(v); };
+    const h = document.createElement('p'); h.className = 'ask'; h.textContent = 'あなたは本物のきこまろですか?';
+    const sub = document.createElement('p'); sub.className = 'sub'; sub.textContent = 'この名前をかたる人が増えています。正直にお答えください。';
+    const row = document.createElement('div'); row.className = 'row';
+    const bReal = document.createElement('button'); bReal.className = 'btn primary'; bReal.textContent = '本物です';
+    const bFake = document.createElement('button'); bFake.className = 'btn'; bFake.textContent = '偽物です';
+    row.append(bReal, bFake); sh.append(h, sub, row);
+    bFake.onclick = () => done(null);
+    bReal.onclick = () => {
+      sh.textContent = '';
+      const h2 = document.createElement('p'); h2.className = 'ask'; h2.textContent = '合言葉を入力してください';
+      const inp = document.createElement('input'); inp.type = 'password'; inp.autocomplete = 'off'; inp.setAttribute('aria-label','合言葉'); inp.style.cssText = 'font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink)';
+      const r2 = document.createElement('div'); r2.className = 'row';
+      const ok = document.createElement('button'); ok.className = 'btn primary'; ok.textContent = '確認';
+      const no = document.createElement('button'); no.className = 'btn'; no.textContent = 'やめる';
+      r2.append(ok, no); sh.append(h2, inp, r2); inp.focus();
+      ok.onclick = () => done(inp.value); no.onclick = () => done(null);
+      inp.addEventListener('keydown', e => { if(e.key === 'Enter') ok.click(); });
+    };
+    document.body.append(ov);
+  });
+}
+async function register(name, key){
   const entry = {name, score:S.score, result:S.result, soil:S.soil, at:Date.now()};
+  const prevLocal = localRows();
   const L = localRows(); L.push(Object.assign({mine:true}, entry)); L.sort((a,b) => b.score - a.score); lsSet(RANK_KEY, L.slice(0,10));
   try{
-    const {status, data} = await api('POST', {pid:getPid(), name, score:S.score, result:S.result, soil:S.soil});
+    const {status, data} = await api('POST', {pid:getPid(), name, score:S.score, result:S.result, soil:S.soil, key});
     if(status === 200 && data && data.ok){
       sharedRows = data.rows; renderRank();
       return data.improved
         ? '世界ランキングに登録しました(現在 ' + data.rank + ' 位)'
         : '自己ベスト(' + (+data.best).toFixed(1) + '点・' + data.rank + '位)のほうが上なので、記録はそのままです';
     }
+    if(status === 403){ lsSet(RANK_KEY, prevLocal); return '本人確認ができませんでした。別の名前で登録してください'; }
     if(status === 422) return 'その名前は使えません。別の名前で登録してください';
     if(status === 429) return '連続で登録できません。少し待ってからもう一度どうぞ';
   }catch(_){}
